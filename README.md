@@ -12,10 +12,36 @@ One-click installers — no Node.js or terminal required.
 | macOS Intel (x64) | [Open Higgsfield AI-1.0.0.dmg](https://github.com/Anil-matcha/Open-Higgsfield-AI/releases/download/v1.0.0/Open.Higgsfield.AI-1.0.0.dmg) |
 | Windows (x64 + ARM64) | [Open Higgsfield AI Setup 1.0.0.exe](https://github.com/Anil-matcha/Open-Higgsfield-AI/releases/download/v1.0.0/Open.Higgsfield.AI.Setup.1.0.0.exe) |
 
-> **macOS:** If you see an "unidentified developer" warning, right-click the app → **Open**.
-> **Windows:** If SmartScreen warns, click **More info → Run anyway**.
-
 All releases: [github.com/Anil-matcha/Open-Higgsfield-AI/releases](https://github.com/Anil-matcha/Open-Higgsfield-AI/releases)
+
+### macOS Installation — "damaged and can't be opened" fix
+
+Because the app is not code-signed, macOS Gatekeeper will block it with a **"damaged and can't be opened"** message. This is expected — the file is fine. Fix it with one Terminal command:
+
+**Step 1** — Open the DMG (it will mount even if the warning appears)
+
+**Step 2** — Open Terminal and run:
+```bash
+xattr -cr "/Volumes/Open Higgsfield AI/Open Higgsfield AI.app"
+```
+
+**Step 3** — Drag the app to `/Applications`, then open it normally.
+
+If you already copied it to Applications before running the command:
+```bash
+xattr -cr "/Applications/Open Higgsfield AI.app"
+```
+
+> Alternatively: after attempting to open, go to **System Settings → Privacy & Security** → scroll down → click **"Open Anyway"**.
+
+### Windows Installation — SmartScreen warning fix
+
+Windows SmartScreen may show a warning because the installer is not code-signed:
+
+1. Click **More info** on the SmartScreen dialog
+2. Click **Run anyway**
+
+The app will install silently to `%LocalAppData%` with a Start Menu shortcut.
 
 ---
 
