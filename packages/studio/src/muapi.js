@@ -228,6 +228,69 @@ export async function getPublishedWorkflows(apiKey) {
     return await response.json();
 };
 
+// Agents — uses direct URL → https://api.muapi.ai/agents/...
+export async function getTemplateAgents(apiKey) {
+    const response = await fetch(`${BASE_URL}/agents/templates/agents`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch template agents: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.agents || data.items || []);
+};
+
+export async function getUserAgents(apiKey) {
+    const response = await fetch(`${BASE_URL}/agents/user/agents`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch user agents: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.agents || data.items || []);
+};
+
+export async function getPublishedAgents(apiKey) {
+    // MuAPI: GET /agents/featured/agents
+    const response = await fetch(`${BASE_URL}/agents/featured/agents`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch featured agents: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.agents || data.items || []);
+};
+
+// GET /agents/user/conversations — returns the user's chat history across all agents
+export async function getUserConversations(apiKey) {
+    const response = await fetch(`${BASE_URL}/agents/user/conversations`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+        }
+    });
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch conversations: ${response.status} - ${errText.slice(0, 100)}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+};
+
 export async function createWorkflow(apiKey, payload) {
     const response = await fetch(`${BASE_URL}/workflow/create`, {
         method: 'POST',

@@ -24,7 +24,8 @@
     "react-toastify": "^11.1.0",
     "reactflow": "^11.11.4",
     "remark-gfm": "^4.0.1",
-    "workflow-builder": "file:../workflow-ui"
+    "workflow-builder": "file:../workflow-ui",
+    "ai-agent": "file:../ai-agent"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

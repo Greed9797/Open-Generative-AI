@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "ai-agent": ["./packages/ai-agent/src/index.js"],
+      "workflow-builder": ["./packages/workflow-ui/src/index.js"]
     }
   }
 }

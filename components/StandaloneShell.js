@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ImageStudio, VideoStudio, LipSyncStudio, CinemaStudio, WorkflowStudio, getUserBalance } from 'studio';
+import { ImageStudio, VideoStudio, LipSyncStudio, CinemaStudio, WorkflowStudio, AgentStudio, getUserBalance } from 'studio';
 import axios from 'axios';
 import ApiKeyModal from './ApiKeyModal';
 
@@ -12,6 +12,7 @@ const TABS = [
   { id: 'lipsync', label: 'Lip Sync' },
   { id: 'cinema',  label: 'Cinema Studio' },
   { id: 'workflows', label: 'Workflows' },
+  { id: 'agents', label: 'Agents' },
 ];
 
 const STORAGE_KEY = 'muapi_key';
@@ -41,6 +42,7 @@ export default function StandaloneShell() {
   // Initialize activeTab from URL slug/params or default to 'image'
   const getInitialTab = () => {
     if (idFromParams || slug.includes('workflow')) return 'workflows';
+    if (slug.includes('agents')) return 'agents';
     const firstSegment = slug[0];
     if (firstSegment && TABS.find(t => t.id === firstSegment)) return firstSegment;
     return 'image';
@@ -59,6 +61,8 @@ export default function StandaloneShell() {
     const info = getWorkflowInfo();
     if (info.id) {
         setActiveTab('workflows');
+    } else if (slug.includes('agents')) {
+        setActiveTab('agents');
     } else {
         const firstSegment = slug[0];
         if (firstSegment && TABS.find(t => t.id === firstSegment)) {
@@ -136,7 +140,7 @@ export default function StandaloneShell() {
     const interceptorId = axios.interceptors.request.use((config) => {
       // Check if URL is local/proxied
       const isRelative = config.url.startsWith('/') || !config.url.startsWith('http');
-      const isInternalProxy = config.url.includes('/api/app') || config.url.includes('/api/workflow') || config.url.includes('/api/v1');
+      const isInternalProxy = config.url.includes('/api/app') || config.url.includes('/api/workflow') || config.url.includes('/api/agents') || config.url.includes('/api/api') || config.url.includes('/api/v1');
 
       if (isRelative || isInternalProxy) {
         config.headers['x-api-key'] = apiKey;
@@ -228,6 +232,7 @@ export default function StandaloneShell() {
         {activeTab === 'lipsync' && <LipSyncStudio apiKey={apiKey} />}
         {activeTab === 'cinema'  && <CinemaStudio  apiKey={apiKey} />}
         {activeTab === 'workflows' && <WorkflowStudio apiKey={apiKey} isHeaderVisible={isHeaderVisible} onToggleHeader={setIsHeaderVisible} />}
+        {activeTab === 'agents' && <AgentStudio apiKey={apiKey} isHeaderVisible={isHeaderVisible} onToggleHeader={setIsHeaderVisible} />}
       </div>
 
       {/* Settings Modal */}

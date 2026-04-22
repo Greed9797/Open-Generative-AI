@@ -1,3 +1,6 @@
 [submodule "packages/workflow-ui"]
 	path = packages/workflow-ui
 	url = https://github.com/Anil-matcha/workflow-ui.git
+[submodule "packages/ai-agent"]
+	path = packages/ai-agent
+	url = https://github.com/jaiprasad04/ai-agent
