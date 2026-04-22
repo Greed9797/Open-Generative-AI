@@ -4,6 +4,8 @@ import {
     i2iModels, getAspectRatiosForI2IModel, getResolutionsForI2IModel, getQualityFieldForI2IModel,
     getMaxImagesForI2IModel
 } from '../lib/models.js';
+import { localAI, isLocalAIAvailable } from '../lib/localInferenceClient.js';
+import { LOCAL_MODEL_CATALOG, getLocalModelById } from '../lib/localModels.js';
 import { ENHANCE_TAGS, QUICK_PROMPTS } from '../lib/promptUtils.js';
 import { AuthModal } from './AuthModal.js';
 import { createUploadPicker } from './UploadPicker.js';
@@ -32,6 +34,11 @@ export function ImageStudio() {
     let dropdownOpen = null;
     let uploadedImageUrls = []; // array of uploaded image URLs (multi-image support)
     let imageMode = false; // false = t2i models, true = i2i models
+
+    // Local inference state
+    let useLocalModel = false;
+    let selectedLocalModel = LOCAL_MODEL_CATALOG[0]?.id || null;
+    let localGenProgress = 0; // 0–1
 
     // Advanced parameters state
     let negativePrompt = '';
@@ -185,6 +192,37 @@ export function ImageStudio() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="opacity-60 text-secondary"><path d="M6 2L3 6v15a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z"/></svg>
     `, '720p', 'quality-btn', 'Set output quality');
 
+    // Local / API source toggle (only shown in Electron)
+    let localToggleBtn = null;
+    if (isLocalAIAvailable()) {
+        localToggleBtn = document.createElement('button');
+        localToggleBtn.id = 'local-toggle-btn';
+        localToggleBtn.className = 'flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all border text-xs font-bold whitespace-nowrap';
+        const updateLocalToggleStyle = () => {
+            if (useLocalModel) {
+                localToggleBtn.className = 'flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all border text-xs font-bold whitespace-nowrap bg-primary/20 border-primary/40 text-primary';
+                localToggleBtn.textContent = '⚡ Local';
+            } else {
+                localToggleBtn.className = 'flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all border text-xs font-bold whitespace-nowrap bg-white/5 border-white/5 text-white/60 hover:bg-white/10';
+                localToggleBtn.textContent = '☁ API';
+            }
+        };
+        updateLocalToggleStyle();
+        localToggleBtn.onclick = (e) => {
+            e.stopPropagation();
+            useLocalModel = !useLocalModel;
+            updateLocalToggleStyle();
+            // Reflect active model in the button label
+            if (useLocalModel) {
+                const lm = getLocalModelById(selectedLocalModel);
+                if (lm) document.getElementById('model-btn-label').textContent = lm.name;
+            } else {
+                document.getElementById('model-btn-label').textContent = selectedModelName;
+            }
+        };
+        controlsLeft.appendChild(localToggleBtn);
+    }
+
     controlsLeft.appendChild(modelBtn);
     controlsLeft.appendChild(arBtn);
     controlsLeft.appendChild(qualityBtn);
@@ -222,6 +260,32 @@ export function ImageStudio() {
     const inlineInstructions = createInlineInstructions('image');
     inlineInstructions.classList.add('max-w-4xl', 'mt-8');
     container.appendChild(inlineInstructions);
+
+    // Local generation progress bar (hidden until active)
+    const localProgressWrap = document.createElement('div');
+    localProgressWrap.className = 'w-full max-w-4xl mt-4 hidden flex-col gap-2';
+    localProgressWrap.id = 'local-progress-wrap';
+    localProgressWrap.innerHTML = `
+        <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white/60">Generating locally...</span>
+            <span id="local-progress-pct" class="text-xs font-bold text-primary">0%</span>
+        </div>
+        <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+            <div id="local-progress-fill" class="h-full bg-primary transition-all duration-200" style="width:0%"></div>
+        </div>
+        <div class="flex justify-end">
+            <button id="local-cancel-btn" class="text-xs text-red-400 hover:text-red-300 transition-colors">Cancel</button>
+        </div>
+    `;
+    container.appendChild(localProgressWrap);
+
+    localProgressWrap.querySelector('#local-cancel-btn')?.addEventListener('click', () => {
+        localAI.cancelGeneration();
+        localProgressWrap.classList.remove('flex');
+        localProgressWrap.classList.add('hidden');
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = `Generate ✨`;
+    });
 
     // ==========================================
     // 3. QUICK TOOLS PANEL (Prompt Enhancer + Quick Starters)
@@ -662,6 +726,48 @@ export function ImageStudio() {
 
             const renderModels = (filter = '') => {
                 list.innerHTML = '';
+
+                if (useLocalModel) {
+                    // ── Local model list ──────────────────────────────────────
+                    const filtered = LOCAL_MODEL_CATALOG.filter(m =>
+                        m.name.toLowerCase().includes(filter.toLowerCase()) ||
+                        m.id.toLowerCase().includes(filter.toLowerCase())
+                    );
+                    if (filtered.length === 0) {
+                        list.innerHTML = `<div class="text-xs text-muted text-center py-4">No local models match</div>`;
+                        return;
+                    }
+                    filtered.forEach(m => {
+                        const item = document.createElement('div');
+                        item.className = `flex items-center justify-between p-3.5 hover:bg-white/5 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-white/5 ${selectedLocalModel === m.id ? 'bg-white/5 border-white/5' : ''}`;
+                        item.innerHTML = `
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-10 h-10 ${m.featured ? 'bg-primary/10 text-primary' : 'bg-green-500/10 text-green-400'} border border-white/5 rounded-xl flex items-center justify-center font-black text-sm shadow-inner uppercase">${m.featured ? '⚡' : m.name.charAt(0)}</div>
+                                <div class="flex flex-col gap-0.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-white tracking-tight">${m.name}</span>
+                                        ${m.featured ? '<span class="text-[9px] font-black px-1 py-0.5 rounded bg-primary/20 text-primary">FEATURED</span>' : ''}
+                                    </div>
+                                    <span class="text-[10px] text-muted">${m.sizeGB} GB · ${m.type.toUpperCase()}</span>
+                                </div>
+                            </div>
+                            ${selectedLocalModel === m.id ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" stroke-width="4"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                        `;
+                        item.onclick = (e) => {
+                            e.stopPropagation();
+                            selectedLocalModel = m.id;
+                            document.getElementById('model-btn-label').textContent = m.name;
+                            selectedAr = m.aspectRatios[0];
+                            document.getElementById('ar-btn-label').textContent = selectedAr;
+                            qualityBtn.style.display = 'none';
+                            closeDropdown();
+                        };
+                        list.appendChild(item);
+                    });
+                    return;
+                }
+
+                // ── Remote (API) model list ───────────────────────────────────
                 const filtered = getCurrentModels().filter(m => m.name.toLowerCase().includes(filter.toLowerCase()) || m.id.toLowerCase().includes(filter.toLowerCase()));
 
                 filtered.forEach(m => {
@@ -1056,6 +1162,74 @@ export function ImageStudio() {
             }
         }
 
+        // ── Local inference path ──────────────────────────────────────────────
+        if (useLocalModel) {
+            const lm = getLocalModelById(selectedLocalModel);
+            if (!lm) { alert('No local model selected.'); return; }
+
+            hero.classList.add('opacity-0', 'scale-95', '-translate-y-10', 'pointer-events-none');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `<span class="animate-spin inline-block mr-2 text-black">◌</span> Generating...`;
+
+            const progressWrap = document.getElementById('local-progress-wrap');
+            const progressFill = document.getElementById('local-progress-fill');
+            const progressPct = document.getElementById('local-progress-pct');
+            progressWrap.classList.remove('hidden');
+            progressWrap.classList.add('flex');
+
+            const unsub = localAI.onProgress(({ step, totalSteps, progress, status }) => {
+                const pct = Math.round((progress || (step / totalSteps)) * 100);
+                if (progressFill) progressFill.style.width = `${pct}%`;
+                if (progressPct) progressPct.textContent = `${pct}%`;
+                generateBtn.innerHTML = `<span class="animate-spin inline-block mr-2 text-black">◌</span> ${pct}%`;
+            });
+
+            let hadError = false;
+            try {
+                const res = await localAI.generate({
+                    model: selectedLocalModel,
+                    prompt,
+                    negative_prompt: negativePrompt || undefined,
+                    aspect_ratio: selectedAr,
+                    steps: steps,
+                    guidance_scale: guidanceScale,
+                    seed,
+                });
+                unsub();
+                progressWrap.classList.replace('flex', 'hidden');
+                progressWrap.classList.add('hidden');
+
+                if (res?.url) {
+                    addToHistory({
+                        id: Date.now().toString(),
+                        url: res.url,
+                        prompt,
+                        model: `local:${selectedLocalModel}`,
+                        aspect_ratio: selectedAr,
+                        seed: res.seed,
+                        timestamp: new Date().toISOString()
+                    });
+                    showImageInCanvas(res.url);
+                } else {
+                    throw new Error('No image returned from local generation');
+                }
+            } catch (e) {
+                hadError = true;
+                unsub();
+                progressWrap.classList.add('hidden');
+                console.error('[Local] generation error:', e);
+                hero.classList.remove('opacity-0', 'scale-95', '-translate-y-10', 'pointer-events-none');
+                console.error('[Local] full error:', e.message);
+                generateBtn.innerHTML = `Error: ${e.message.slice(0, 120)}`;
+                setTimeout(() => { generateBtn.innerHTML = `Generate ✨`; }, 6000);
+            } finally {
+                generateBtn.disabled = false;
+                if (!hadError) generateBtn.innerHTML = `Generate ✨`;
+            }
+            return;
+        }
+
+        // ── Remote API path ───────────────────────────────────────────────────
         const apiKey = localStorage.getItem('muapi_key');
         if (!apiKey) {
             AuthModal(() => generateBtn.click());

@@ -1,92 +1,117 @@
+import { LocalModelManager } from './LocalModelManager.js';
+import { isLocalAIAvailable } from '../lib/localInferenceClient.js';
+
 export function SettingsModal(onClose) {
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.right = '0';
-    overlay.style.bottom = '0';
-    overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-    overlay.style.display = 'flex';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.zIndex = '100';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:100;';
 
     const modal = document.createElement('div');
-    modal.className = 'bg-card p-6 rounded-xl border border-border-color w-96 glass';
-    modal.style.background = 'var(--bg-card)';
-    modal.style.padding = '1.5rem';
-    modal.style.borderRadius = 'var(--border-radius-xl)';
-    modal.style.border = '1px solid var(--border-color)';
-    modal.style.width = '24rem';
+    modal.style.cssText = 'background:var(--bg-card,#111);border-radius:1rem;border:1px solid rgba(255,255,255,0.08);width:min(90vw,36rem);max-height:85vh;display:flex;flex-direction:column;overflow:hidden;';
 
-    const title = document.createElement('h2');
-    title.textContent = 'Settings';
-    title.className = 'text-xl font-bold mb-4';
-    title.style.marginBottom = '1rem';
+    // ── Header ────────────────────────────────────────────────────────────────
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;';
+    header.innerHTML = `
+        <h2 style="font-size:1rem;font-weight:800;color:#fff;margin:0;">Settings</h2>
+        <button id="settings-close-btn" style="color:rgba(255,255,255,0.4);background:none;border:none;cursor:pointer;padding:4px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+    `;
+    modal.appendChild(header);
 
-    const label = document.createElement('label');
-    label.textContent = 'Muapi API Key';
-    label.className = 'block text-sm text-secondary mb-2';
+    // ── Tabs ──────────────────────────────────────────────────────────────────
+    const TABS = [
+        { id: 'api', label: 'API Key' },
+        ...(isLocalAIAvailable() ? [{ id: 'local', label: 'Local Models' }] : []),
+    ];
 
-    const input = document.createElement('input');
-    input.type = 'password';
-    input.className = 'w-full mb-4 p-2 rounded bg-input border border-border-color';
-    input.value = localStorage.getItem('muapi_key') || '';
-    input.placeholder = 'Enter your Muapi API key...';
-    input.style.width = '100%';
-    input.style.marginBottom = '1rem';
+    let activeTab = 'api';
 
-    const btnContainer = document.createElement('div');
-    btnContainer.className = 'flex justify-end gap-2';
-    btnContainer.style.display = 'flex';
-    btnContainer.style.justifyContent = 'flex-end';
-    btnContainer.style.gap = '0.5rem';
+    const tabBar = document.createElement('div');
+    tabBar.style.cssText = 'display:flex;gap:0.25rem;padding:0.75rem 1.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;';
 
-    const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.className = 'px-4 py-2 rounded hover:bg-white/5';
-    cancelBtn.onclick = () => {
-        document.body.removeChild(overlay);
+    const tabBtns = {};
+    TABS.forEach(({ id, label }) => {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.style.cssText = 'padding:0.4rem 0.75rem;border-radius:0.5rem 0.5rem 0 0;font-size:0.75rem;font-weight:700;border:none;cursor:pointer;transition:all 0.15s;';
+        btn.onclick = () => switchTab(id);
+        tabBtns[id] = btn;
+        tabBar.appendChild(btn);
+    });
+    modal.appendChild(tabBar);
+
+    // ── Body ──────────────────────────────────────────────────────────────────
+    const body = document.createElement('div');
+    body.style.cssText = 'flex:1;overflow-y:auto;padding:1.5rem;';
+    modal.appendChild(body);
+
+    // ── Tab: API Key ──────────────────────────────────────────────────────────
+    const apiPanel = document.createElement('div');
+    apiPanel.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div>
+                <label style="display:block;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:0.4rem;font-weight:600;">Muapi API Key</label>
+                <input id="settings-api-key" type="password"
+                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;padding:0.6rem 0.9rem;color:#fff;font-size:0.875rem;outline:none;"
+                    placeholder="Enter your Muapi API key..."
+                    value="${localStorage.getItem('muapi_key') || ''}">
+            </div>
+            <p style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin:0;">
+                Your API key is stored locally and never sent anywhere except api.muapi.ai.
+            </p>
+            <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.5rem;">
+                <button id="settings-cancel-btn" style="padding:0.5rem 1rem;border-radius:0.5rem;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:0.75rem;font-weight:700;cursor:pointer;">Cancel</button>
+                <button id="settings-save-btn" style="padding:0.5rem 1rem;border-radius:0.5rem;background:var(--color-primary,#d9ff00);color:#000;font-size:0.75rem;font-weight:700;cursor:pointer;border:none;">Save</button>
+            </div>
+        </div>
+    `;
+
+    // ── Tab: Local Models ─────────────────────────────────────────────────────
+    const localPanel = LocalModelManager();
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
+    const switchTab = (id) => {
+        activeTab = id;
+        body.innerHTML = '';
+
+        TABS.forEach(({ id: tid }) => {
+            const btn = tabBtns[tid];
+            if (tid === id) {
+                btn.style.background = 'rgba(255,255,255,0.08)';
+                btn.style.color = '#fff';
+            } else {
+                btn.style.background = 'transparent';
+                btn.style.color = 'rgba(255,255,255,0.4)';
+            }
+        });
+
+        if (id === 'api') body.appendChild(apiPanel);
+        if (id === 'local') body.appendChild(localPanel);
+    };
+
+    switchTab('api');
+
+    // ── API key save/cancel handlers ──────────────────────────────────────────
+    const close = () => {
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
         if (onClose) onClose();
     };
 
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save';
-    saveBtn.className = 'px-4 py-2 rounded bg-primary text-black font-medium';
-    saveBtn.style.backgroundColor = 'var(--color-primary)';
-    saveBtn.style.color = 'black';
-    saveBtn.style.fontWeight = '500';
-
-    saveBtn.onclick = () => {
-        const key = input.value.trim();
+    apiPanel.querySelector('#settings-cancel-btn').onclick = close;
+    apiPanel.querySelector('#settings-save-btn').onclick = () => {
+        const key = apiPanel.querySelector('#settings-api-key').value.trim();
         if (key) {
             localStorage.setItem('muapi_key', key);
-            alert('API Key saved!');
-            document.body.removeChild(overlay);
-            if (onClose) onClose();
+            close();
         } else {
-            alert('Please enter a valid key');
+            alert('Please enter a valid API key.');
         }
     };
 
-    modal.appendChild(title);
-    modal.appendChild(label);
-    modal.appendChild(input);
-
-    btnContainer.appendChild(cancelBtn);
-    btnContainer.appendChild(saveBtn);
-    modal.appendChild(btnContainer);
+    header.querySelector('#settings-close-btn').onclick = close;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
     overlay.appendChild(modal);
-
-    // Close on outside click
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            document.body.removeChild(overlay);
-            if (onClose) onClose();
-        }
-    });
-
     return overlay;
 }

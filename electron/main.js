@@ -1,5 +1,6 @@
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
+const { register: registerLocalInference } = require('./lib/localInference');
 
 // Ubuntu 24.04+ sets kernel.apparmor_restrict_unprivileged_userns=1 which
 // blocks Chromium's user namespace sandbox. The .deb package ships an AppArmor
@@ -24,6 +25,7 @@ function createWindow() {
             webSecurity: false,
             contextIsolation: true,
             nodeIntegration: false,
+            preload: path.join(__dirname, 'preload.js'),
         },
         ...(isMac ? { titleBarStyle: 'hiddenInset' } : {}),
         backgroundColor: '#0d0d0d',
@@ -57,6 +59,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
     createWindow();
+    registerLocalInference();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

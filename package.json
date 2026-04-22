@@ -17,6 +17,7 @@
     "setup": "npm install && npm run build:studio",
     "vite:dev": "vite",
     "vite:build": "vite build",
+    "electron:dev": "npm run vite:build && electron .",
     "electron:build": "vite build && electron-builder --mac",
     "electron:build:win": "vite build && electron-builder --win",
     "electron:build:linux": "vite build && electron-builder --linux",
