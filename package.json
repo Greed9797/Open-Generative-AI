@@ -5,8 +5,8 @@
   "version": "1.0.4",
   "workspaces": [
     "packages/studio",
-    "packages/workflow-ui",
-    "packages/ai-agent"
+    "packages/Vibe-Workflow/packages/workflow-builder",
+    "packages/Open-Poe-AI/packages/agents"
   ],
   "scripts": {
     "dev": "next dev",
@@ -93,8 +93,8 @@
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",
     "studio": "*",
-    "workflow-builder": "file:./packages/workflow-ui",
-    "ai-agent": "file:./packages/ai-agent"
+    "workflow-builder": "file:./packages/Vibe-Workflow/packages/workflow-builder",
+    "ai-agent": "file:./packages/Open-Poe-AI/packages/agents"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
