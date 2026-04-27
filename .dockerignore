@@ -1,0 +1,8 @@
+.next
+node_modules
+.agent-jobs
+.hyperframes-renders
+public/renders
+release
+.env*.local
+*.log

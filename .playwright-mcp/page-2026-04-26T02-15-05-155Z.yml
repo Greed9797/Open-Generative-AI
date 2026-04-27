@@ -1,0 +1,23 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]: Workflow — VBO.AI
+  - generic [ref=e745]:
+    - generic [ref=e746]:
+      - button "Back to All Workflows" [ref=e747] [cursor=pointer]:
+        - img [ref=e748]
+      - generic [ref=e751]:
+        - button "Play" [ref=e752] [cursor=pointer]
+        - button "Builder" [ref=e753] [cursor=pointer]
+      - button "Exit Zen" [ref=e755] [cursor=pointer]:
+        - img [ref=e756]
+        - text: Exit Zen
+    - generic [ref=e758]:
+      - generic [ref=e761]:
+        - heading "Configuration" [level=3] [ref=e763]
+        - button "Run Workflow" [ref=e764] [cursor=pointer]:
+          - img [ref=e765]
+          - generic [ref=e767]: Run Workflow
+      - generic [ref=e769]:
+        - img [ref=e771]
+        - paragraph [ref=e773]: Configure parameters and run the workflow to see results.

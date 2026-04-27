@@ -55,7 +55,7 @@ function downloadFile(url, destPath, onProgress) {
         const mod = parsed.protocol === 'https:' ? https : http;
 
         const reqHeaders = {
-            'User-Agent': 'Mozilla/5.0 (compatible; open-generative-ai/1.0)',
+            'User-Agent': 'Mozilla/5.0 (compatible; vbo-ai/1.0)',
             'Accept': '*/*',
             'Connection': 'keep-alive',
         };
@@ -180,7 +180,7 @@ async function downloadBinary(mainWindow) {
             const releaseData = await new Promise((resolve, reject) => {
                 https.get(
                     'https://api.github.com/repos/leejet/stable-diffusion.cpp/releases/latest',
-                    { headers: { 'User-Agent': 'open-generative-ai' } },
+                    { headers: { 'User-Agent': 'vbo-ai' } },
                     (res) => {
                         let body = '';
                         res.on('data', (d) => { body += d; });

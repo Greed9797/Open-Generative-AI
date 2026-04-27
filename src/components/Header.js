@@ -15,15 +15,7 @@ export function Header(navigate) {
     // Logo
     const logoContainer = document.createElement('div');
     logoContainer.className = 'cursor-pointer hover:scale-110 transition-transform';
-    logoContainer.innerHTML = `
-        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1.5 shadow-lg">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="black"/>
-                <path d="M2 17L12 22L22 17" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-    `;
+    logoContainer.innerHTML = `<img src="/logo.webp" alt="VBO.AI" width="32" height="32" class="w-8 h-8 rounded-lg shadow-lg" />`;
 
     const menu = document.createElement('nav');
     menu.className = 'hidden lg:flex items-center gap-6 text-[13px] font-bold text-secondary';

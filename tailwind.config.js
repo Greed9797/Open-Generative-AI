@@ -11,17 +11,25 @@ module.exports = {
         extend: {
             colors: {
                 primary: {
-                    DEFAULT: '#d9ff00',
-                    hover: '#c4e600',
+                    DEFAULT: '#FF4500',
+                    light: '#FF7733',
+                    hover: '#e03c00',
                 },
-                'app-bg': '#050505',
-                'panel-bg': '#0a0a0a',
-                'card-bg': '#141414',
-                secondary: '#a1a1aa',
-                muted: '#52525b',
+                'app-bg': '#000000',
+                'panel-bg': '#111111',
+                'card-bg': '#1A1A1A',
+                secondary: '#999999',
+                muted: '#555555',
+                'border-color': '#222222',
             },
             fontFamily: {
+                display: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
                 sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            },
+            fontSize: {
+                'display-xl': ['clamp(48px,7vw,96px)', { lineHeight: '0.95', letterSpacing: '-0.03em' }],
+                'display-lg': ['clamp(36px,5vw,64px)', { lineHeight: '1', letterSpacing: '-0.02em' }],
+                'display-md': ['clamp(28px,4vw,48px)', { lineHeight: '1.05', letterSpacing: '-0.02em' }],
             },
             borderRadius: {
                 'xl': '1rem',
@@ -29,10 +37,12 @@ module.exports = {
                 '3xl': '2rem',
             },
             boxShadow: {
-                'glow': '0 0 20px rgba(217, 255, 0, 0.4)',
-                'glow-accent': '0 0 20px rgba(168, 85, 247, 0.4)',
+                'glow': '0 0 20px rgba(255, 69, 0, 0.4)',
+                'glow-accent': '0 0 20px rgba(255, 120, 0, 0.3)',
+                'glow-cyan': '0 0 120px rgba(79,195,247,0.25)',
+                'glow-pink': '0 0 80px rgba(255,31,143,0.3)',
                 '3xl': '0 35px 60px -15px rgba(0, 0, 0, 0.8)',
-            }
+            },
         },
     },
     plugins: [],

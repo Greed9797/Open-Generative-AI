@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { generateImage, generateI2I, uploadFile } from "../muapi.js";
 import {
   t2iModels,
@@ -114,7 +114,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
     const tooLarge = files.filter((f) => f.size > MAX_IMAGE_SIZE);
     if (tooLarge.length > 0) {
       alert(
-        `The following images are too large (max 10MB): ${tooLarge.map((f) => f.name).join(", ")}`,
+        `As seguintes imagens excedem o limite (máx. 10MB): ${tooLarge.map((f) => f.name).join(", ")}`,
       );
       return;
     }
@@ -170,7 +170,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
         }),
       );
     } catch (err) {
-      alert(`Image upload failed: ${err.message}`);
+      alert(`Falha no upload da imagem: ${err.message}`);
     } finally {
       setUploading(false);
       setLastUploadProgress(0);
@@ -383,13 +383,13 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
 
   const triggerTitle = hasSelection
     ? count > 1
-      ? `${count} of ${maxImages} images selected — click to manage`
+      ? `${count} de ${maxImages} imagens selecionadas — clique para gerenciar`
       : isMulti
-        ? `1 image selected — click to add more (up to ${maxImages})`
-        : "Reference image"
+        ? `1 imagem selecionada — clique para adicionar mais (até ${maxImages})`
+        : "Imagem de referência"
     : isMulti
-      ? `Add up to ${maxImages} images`
-      : "Reference image";
+      ? `Adicionar até ${maxImages} imagens`
+      : "Imagem de referência";
 
   return (
     <div className="relative">
@@ -432,11 +432,11 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
           <div className="flex items-center justify-between px-1 pb-3 mb-2 border-b border-white/5">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-bold text-secondary">
-                Reference Images
+                Imagens de Referência
               </span>
               {isMulti && (
                 <span className="text-[9px] text-muted">
-                  Select up to {maxImages} images
+                  Selecione até {maxImages} imagens
                 </span>
               )}
             </div>
@@ -447,7 +447,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
                   onClick={handleDone}
                   className="flex items-center gap-1 px-3 py-1.5 bg-primary text-black rounded-xl text-xs font-black transition-all hover:scale-105"
                 >
-                  ✓ Done ({count})
+                  ✓ Concluir ({count})
                 </button>
               )}
               <button
@@ -471,7 +471,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                {isMulti ? "Upload files" : "Upload new"}
+                {isMulti ? "Enviar arquivos" : "Enviar novo"}
               </button>
             </div>
           </div>
@@ -492,7 +492,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span className="text-xs text-secondary">No uploads yet</span>
+              <span className="text-xs text-secondary">Nenhum upload ainda</span>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-0.5">
@@ -535,7 +535,7 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/cell:opacity-100 transition-opacity flex items-end justify-end p-1">
                         <button
                           type="button"
-                          title="Remove from history"
+                          title="Remover do histórico"
                           onClick={(e) => handleRemoveFromHistory(e, entry)}
                           className="w-5 h-5 bg-red-500/80 hover:bg-red-500 rounded-md flex items-center justify-center transition-colors"
                         >
@@ -585,14 +585,14 @@ function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }
           {isMulti && hasSelection && (
             <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
               <span className="text-xs text-secondary">
-                {count} of {maxImages} selected
+                {count} de {maxImages} selecionadas
               </span>
               <button
                 type="button"
                 onClick={handleDone}
                 className="px-4 py-1.5 bg-primary text-black rounded-xl text-xs font-black transition-all hover:scale-105"
               >
-                Use Selected
+                Usar Selecionadas
               </button>
             </div>
           )}
@@ -631,7 +631,7 @@ function ModelDropdown({ models, selectedModel, onSelect, onClose }) {
           </svg>
           <input
             type="text"
-            placeholder="Search models..."
+            placeholder="Buscar modelos..."
             value={search}
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => setSearch(e.target.value)}
@@ -640,7 +640,7 @@ function ModelDropdown({ models, selectedModel, onSelect, onClose }) {
         </div>
       </div>
       <div className="text-xs font-medium text-secondary py-2 shrink-0">
-        Available models
+        Modelos disponíveis
       </div>
       <div className="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1 pb-2">
         {filtered.map((m) => (
@@ -679,7 +679,7 @@ function ModelDropdown({ models, selectedModel, onSelect, onClose }) {
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#d9ff00"
+                stroke="#FF4500"
                 strokeWidth="4"
               >
                 <polyline points="20 6 9 17 4 12" />
@@ -720,7 +720,7 @@ function SimpleDropdown({ title, options, selected, onSelect, onClose }) {
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#d9ff00"
+                stroke="#FF4500"
                 strokeWidth="4"
               >
                 <polyline points="20 6 9 17 4 12" />
@@ -745,6 +745,20 @@ export default function ImageStudio({
   const PERSIST_KEY = "hg_image_studio_persistent";
 
   // ── Model / mode state ──────────────────────────────────────────────────
+  const [customT2iModels, setCustomT2iModels] = useState([]);
+  useEffect(() => {
+    fetch('/api/settings/api-keys')
+      .then((r) => r.ok ? r.json() : { keys: [] })
+      .then(({ keys = [] }) => {
+        const custom = keys
+          .filter((k) => k.isCustom && k.isActive && k.roles?.includes('image_gen') && k.modelIdentifier)
+          .map((k) => ({ id: k.modelIdentifier, name: k.providerName, endpoint: k.modelIdentifier, inputs: { prompt: { type: 'string' } } }));
+        setCustomT2iModels(custom);
+      })
+      .catch(() => {});
+  }, []);
+  const allT2iModels = useMemo(() => [...customT2iModels, ...t2iModels], [customT2iModels]);
+
   const [imageMode, setImageMode] = useState(false); // false=t2i, true=i2i
   const [selectedModelId, setSelectedModelId] = useState(t2iModels[0].id);
   const [selectedModelName, setSelectedModelName] = useState(t2iModels[0].name);
@@ -863,7 +877,7 @@ export default function ImageStudio({
     const tooLarge = files.filter((f) => f.size > MAX_IMAGE_SIZE);
     if (tooLarge.length > 0) {
       alert(
-        `The following images are too large (max 10MB): ${tooLarge.map((f) => f.name).join(", ")}`
+        `As seguintes imagens excedem o limite (máx. 10MB): ${tooLarge.map((f) => f.name).join(", ")}`
       );
       return;
     }
@@ -889,7 +903,7 @@ export default function ImageStudio({
 
       handleUploadSelect({ urls });
     } catch (err) {
-      alert(`Image upload failed: ${err.message}`);
+      alert(`Falha no upload da imagem: ${err.message}`);
     } finally {
       setGenerating(false);
     }
@@ -907,7 +921,7 @@ export default function ImageStudio({
   }, [droppedFiles, onFilesHandled, processDroppedImages]);
 
   // ── Derived: current model lists & helpers ───────────────────────────────
-  const currentModels = imageMode ? i2iModels : t2iModels;
+  const currentModels = imageMode ? i2iModels : allT2iModels;
   const currentAspectRatios = imageMode
     ? getAspectRatiosForI2IModel(selectedModelId)
     : getAspectRatiosForModel(selectedModelId);
@@ -952,7 +966,7 @@ export default function ImageStudio({
   const handleUploadClear = useCallback(() => {
     setUploadedImageUrls([]);
     setImageMode(false);
-    const firstT2I = t2iModels[0];
+    const firstT2I = allT2iModels[0];
     const ars = getAspectRatiosForModel(firstT2I.id);
     const resolutions = getResolutionsForModel(firstT2I.id);
     setSelectedModelId(firstT2I.id);
@@ -996,7 +1010,7 @@ export default function ImageStudio({
     setPrompt("");
     setUploadedImageUrls([]);
     setImageMode(false);
-    const firstT2I = t2iModels[0];
+    const firstT2I = allT2iModels[0];
     const ars = getAspectRatiosForModel(firstT2I.id);
     const resolutions = getResolutionsForModel(firstT2I.id);
     setSelectedModelId(firstT2I.id);
@@ -1012,12 +1026,12 @@ export default function ImageStudio({
 
     if (imageMode) {
       if (uploadedImageUrls.length === 0) {
-        alert("Please upload a reference image first.");
+        alert("Por favor, faça upload de uma imagem de referência primeiro.");
         return;
       }
     } else {
       if (!prompt.trim()) {
-        alert("Please enter a prompt to generate an image.");
+        alert("Por favor, insira um prompt para gerar uma imagem.");
         return;
       }
     }
@@ -1075,8 +1089,8 @@ export default function ImageStudio({
       });
     } catch (e) {
       console.error("[ImageStudio] Generation failed:", e);
-      setGenerateError(e.message.slice(0, 80));
-      setTimeout(() => setGenerateError(null), 4000);
+      setGenerateError(e.message.slice(0, 120));
+      setTimeout(() => setGenerateError(null), 8000);
     } finally {
       setGenerating(false);
     }
@@ -1084,10 +1098,10 @@ export default function ImageStudio({
 
   const placeholderText =
     uploadedImageUrls.length > 1
-      ? `${uploadedImageUrls.length} images selected — describe the transformation (optional)`
+      ? `${uploadedImageUrls.length} imagens selecionadas — descreva a transformação (opcional)`
       : imageMode
-        ? "Describe how to transform this image (optional)"
-        : "Describe the image you want to create";
+        ? "Descreva como transformar esta imagem (opcional)"
+        : "Descreva a imagem que deseja criar";
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -1104,7 +1118,7 @@ export default function ImageStudio({
               >
                 <img
                   src={entry.url}
-                  alt={entry.prompt?.substring(0, 30) || "Generated image"}
+                  alt={entry.prompt?.substring(0, 30) || "Imagem gerada"}
                   className="w-full aspect-square object-cover bg-black/40 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => setFullscreenUrl(entry.url)}
                 />
@@ -1113,7 +1127,7 @@ export default function ImageStudio({
                 <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     type="button"
-                    title="Fullscreen"
+                    title="Tela cheia"
                     onClick={(e) => {
                       e.stopPropagation();
                       setFullscreenUrl(entry.url);
@@ -1129,7 +1143,7 @@ export default function ImageStudio({
                   </button>
                   <button
                     type="button"
-                    title="Download"
+                    title="Baixar"
                     onClick={(e) => {
                       e.stopPropagation();
                       downloadImage(entry.url, `muapi-${entry.id || idx}.jpg`);
@@ -1145,7 +1159,7 @@ export default function ImageStudio({
                 {/* Prompt & Details */}
                 <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
                   <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
-                    {entry.prompt || "No prompt provided"}
+                    {entry.prompt || "Sem prompt"}
                   </p>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20">
@@ -1158,50 +1172,64 @@ export default function ImageStudio({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
-            <div className="mb-12 relative group">
-              <div className="absolute inset-0 bg-primary/10 blur-[120px] rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-1000" />
-              <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white/[0.02] rounded-[2rem] flex items-center justify-center border border-white/[0.05] overflow-hidden backdrop-blur-sm">
-                <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10 relative z-10 transition-transform duration-500 group-hover:scale-110">
-                  <svg
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    className="text-primary opacity-80"
+          <div className="relative flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[60vh]">
+            {/* Subtle atmospheric glow */}
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true" style={{ background: 'radial-gradient(ellipse 55% 50% at 50% 38%, rgba(255,69,0,0.06) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+
+            <div className="relative z-10 flex flex-col items-center gap-7">
+              {/* Fan of image cards */}
+              <div className="relative select-none" style={{ width: 280, height: 160 }}>
+                {[
+                  { rotate: -13, tx: -95, ty: 8, z: 1 },
+                  { rotate: -4,  tx: -32, ty: 3, z: 2 },
+                  { rotate: 4,   tx: 32,  ty: 3, z: 3 },
+                  { rotate: 13,  tx: 95,  ty: 8, z: 1 },
+                ].map((s, idx) => (
+                  <div
+                    key={idx}
+                    className="absolute rounded-2xl overflow-hidden border border-white/[0.09] shadow-xl"
+                    style={{
+                      width: 96, height: 128,
+                      top: '50%', left: '50%',
+                      transform: `translate(calc(-50% + ${s.tx}px), calc(-50% + ${s.ty}px)) rotate(${s.rotate}deg)`,
+                      zIndex: s.z,
+                      background: 'linear-gradient(135deg, #181818, #111)',
+                    }}
                   >
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                </div>
-                <div className="absolute top-4 right-4 text-[10px] text-primary/40 animate-pulse">
-                  ✨
-                </div>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Text */}
+              <div className="flex flex-col items-center gap-1.5 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/25">COMECE A CRIAR COM</p>
+                <h1 className="font-black uppercase tracking-tight" style={{ fontSize: 'clamp(28px, 4.5vw, 60px)', letterSpacing: '-0.02em' }}>
+                  <span style={{ color: '#FF4500' }}>{selectedModelName}</span>
+                </h1>
+                <p className="text-sm text-white/25 mt-1 font-medium max-w-sm">
+                  Descreva uma cena, personagem, humor ou estilo — e veja ganhar vida
+                </p>
               </div>
             </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 text-center px-4">
-              <span className="text-white/40 font-medium">START CREATING WITH</span>
-              <br />
-              <span className="text-white">IMAGE STUDIO</span>
-            </h1>
-            <p className="text-white/40 text-sm md:text-base font-medium tracking-wide text-center max-w-lg leading-relaxed">
-              Describe a scene, character, mood, or style — and watch it come to life
-            </p>
           </div>
         )}
       </div>
 
       {/* ── BOTTOM PROMPT BAR ── */}
-      <div 
-        className="absolute bottom-4 w-full max-w-[95%] lg:max-w-4xl z-40 animate-fade-in-up" 
+      <div
+        className="absolute bottom-4 w-full max-w-[95%] lg:max-w-4xl z-40 animate-fade-in-up"
         style={{ animationDelay: "0.2s" }}
       >
-        <div className="w-full bg-[#0a0a0a]/80 backdrop-blur-3xl rounded-md border border-white/10 p-4 flex flex-col gap-2 shadow-2xl">
+        <div className="w-full bg-[#0a0a0a]/85 backdrop-blur-3xl rounded-xl border border-white/[0.08] flex flex-col gap-2 shadow-2xl">
           {/* Top row: upload picker + textarea */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 px-4 pt-4">
             <UploadButton
               apiKey={apiKey}
               maxImages={maxImages}
@@ -1209,23 +1237,36 @@ export default function ImageStudio({
               onClear={handleUploadClear}
               initialUrls={uploadedImageUrls}
             />
-            <div className="flex-1 flex flex-col gap-2">
-              <textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onInput={handleTextareaInput}
-                placeholder={placeholderText}
-                rows={1}
-                className="w-full bg-transparent border-none text-white text-sm placeholder:text-white/20 focus:outline-none resize-none pt-1 leading-relaxed min-h-[40px] max-h-[150px] md:max-h-[250px] overflow-y-auto custom-scrollbar"
-              />
-            </div>
+            <textarea
+              ref={textareaRef}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onInput={handleTextareaInput}
+              placeholder={placeholderText}
+              rows={1}
+              className="flex-1 bg-transparent border-none text-white text-sm placeholder:text-white/20 focus:outline-none resize-none leading-relaxed min-h-[36px] max-h-[140px] overflow-y-auto custom-scrollbar"
+            />
           </div>
 
+          {/* Error banner */}
+          {generateError && (
+            <div style={{
+              background: 'rgba(220,38,38,0.1)',
+              border: '1px solid rgba(220,38,38,0.3)',
+              borderRadius: 8,
+              padding: '10px 14px',
+              color: '#f87171',
+              fontSize: 13,
+              marginTop: 4,
+            }}>
+              {generateError}
+            </div>
+          )}
+
           {/* Bottom row: controls + generate */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2 border-t border-white/[0.03] relative">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 pb-4 pt-2 border-t border-white/[0.05] relative">
             {/* Left controls */}
-            <div className="flex items-center gap-2 relative flex-wrap pb-1 md:pb-0">
+            <div className="flex items-center gap-2 relative flex-wrap">
               {/* Model button */}
               <div className="relative">
                 <button
@@ -1234,23 +1275,15 @@ export default function ImageStudio({
                     e.stopPropagation();
                     setDropdownOpen((o) => (o === "model" ? null : "model"));
                   }}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-full border border-white/[0.06] transition-all group whitespace-nowrap"
                 >
-                  <div className="w-4 h-4 bg-[#d9ff00] rounded flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-black uppercase">G</span>
+                  <div className="w-3.5 h-3.5 bg-[#FF4500] rounded-full flex items-center justify-center">
+                    <span className="text-[7px] font-black text-black uppercase">G</span>
                   </div>
-                  <span className="text-xs font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
+                  <span className="text-[11px] font-semibold text-white/60 group-hover:text-white/90 transition-colors">
                     {selectedModelName}
                   </span>
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    className="opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                  >
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className="opacity-40">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </button>
@@ -1279,12 +1312,12 @@ export default function ImageStudio({
                     e.stopPropagation();
                     setDropdownOpen((o) => (o === "ar" ? null : "ar"));
                   }}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-full border border-white/[0.06] transition-all group whitespace-nowrap"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40 text-white">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-50 text-white">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                   </svg>
-                  <span className="text-[11px] font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
+                  <span className="text-[11px] font-semibold text-white/60 group-hover:text-white/90 transition-colors">
                     {selectedAr}
                   </span>
                 </button>
@@ -1295,7 +1328,7 @@ export default function ImageStudio({
                     className="absolute bottom-[calc(100%+12px)] left-0 z-50 bg-[#0a0a0a] rounded-md p-3 max-h-[40vh] overflow-y-auto custom-scrollbar shadow-2xl border border-white/10 min-w-[160px]"
                   >
                     <SimpleDropdown
-                      title="Aspect Ratio"
+                      title="Proporção"
                       options={currentAspectRatios}
                       selected={selectedAr}
                       onSelect={(val) => setSelectedAr(val)}
@@ -1314,12 +1347,12 @@ export default function ImageStudio({
                       e.stopPropagation();
                       setDropdownOpen((o) => (o === "quality" ? null : "quality"));
                     }}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-full border border-white/[0.06] transition-all group whitespace-nowrap"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40 text-white">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-50 text-white">
                       <path d="M6 2L3 6v15a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" />
                     </svg>
-                    <span className="text-[11px] font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
+                    <span className="text-[11px] font-semibold text-white/60 group-hover:text-white/90 transition-colors">
                       {selectedQuality || currentResolutions[0]}
                     </span>
                   </button>
@@ -1330,7 +1363,7 @@ export default function ImageStudio({
                       className="absolute bottom-[calc(100%+12px)] left-0 z-50 bg-[#0a0a0a] rounded-md p-3 max-h-[40vh] overflow-y-auto custom-scrollbar shadow-2xl border border-white/[0.05] min-w-[160px]"
                     >
                       <SimpleDropdown
-                        title="Resolution"
+                        title="Resolução"
                         options={currentResolutions}
                         selected={selectedQuality}
                         onSelect={(val) => setSelectedQuality(val)}
@@ -1341,22 +1374,11 @@ export default function ImageStudio({
                 </div>
               )}
 
-              {/* Batch size selector */}
-              <div className="flex items-center gap-1 bg-white/[0.03] rounded-md p-1 border border-white/[0.03]">
-                {[1, 2, 3, 4].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setBatchSize(num)}
-                    className={`w-7 h-7 flex items-center justify-center rounded-md text-[10px] font-black transition-all ${
-                      batchSize === num
-                        ? "bg-[#d9ff00] text-black shadow-lg shadow-[#d9ff00]/20"
-                        : "text-white/40 hover:text-white/80 hover:bg-white/5"
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
+              {/* Batch size: arrow count */}
+              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white/[0.04] border border-white/[0.06] rounded-full">
+                <button type="button" onClick={() => setBatchSize(b => Math.max(1, b - 1))} className="text-white/40 hover:text-white transition-colors text-xs leading-none w-3">←</button>
+                <span className="text-[11px] font-semibold text-white/60 px-1.5">{batchSize}/4</span>
+                <button type="button" onClick={() => setBatchSize(b => Math.min(4, b + 1))} className="text-white/40 hover:text-white transition-colors text-xs leading-none">+</button>
               </div>
             </div>
 
@@ -1365,18 +1387,20 @@ export default function ImageStudio({
               type="button"
               onClick={handleGenerate}
               disabled={generating}
-              className="bg-[#d9ff00] text-black px-4 py-2 rounded-md font-medium text-sm hover:bg-[#e5ff33] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-[#d9ff00]/10 disabled:opacity-50 disabled:cursor-not-allowed z-10"
+              className="bg-[#FF4500] text-black px-6 py-2.5 rounded-full font-black text-[11px] uppercase tracking-widest hover:bg-[#e03c00] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed z-10"
+              style={{ boxShadow: '0 0 20px rgba(255,69,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)' }}
             >
               {generating ? (
                 <>
-                  <span className="animate-spin inline-block text-black">◌</span>
-                  Generating...
+                  <span className="animate-spin inline-block">◌</span>
+                  Gerando...
                 </>
               ) : generateError ? (
-                `Error: ${generateError}`
+                "Erro — tentar novamente"
               ) : (
                 <>
-                  <span>Generate</span>
+                  <span>Gerar</span>
+                  <span className="text-[9px] opacity-60">→ {batchSize}</span>
                 </>
               )}
             </button>
@@ -1405,8 +1429,8 @@ export default function ImageStudio({
           </button>
           <img 
             src={fullscreenUrl} 
-            alt="Fullscreen Preview" 
-            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
+            alt="Visualização em tela cheia"
+            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           />
         </div>

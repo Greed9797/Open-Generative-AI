@@ -1,0 +1,51 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - banner [ref=e13]:
+      - generic [ref=e14]:
+        - img [ref=e16]
+        - generic [ref=e18]: VBO.AI
+      - navigation [ref=e19]:
+        - button "Image Studio" [ref=e20] [cursor=pointer]: Image Studio
+        - button "Video Studio" [ref=e22] [cursor=pointer]
+        - button "✂️ Video Editor" [ref=e23] [cursor=pointer]
+        - button "🤖 Agent Studio" [ref=e24] [cursor=pointer]
+        - button "Lip Sync" [ref=e25] [cursor=pointer]
+        - button "Cinema Studio" [ref=e26] [cursor=pointer]
+        - button "Marketing Studio" [ref=e27] [cursor=pointer]
+        - button "Workflows" [ref=e28] [cursor=pointer]
+        - button "Agents" [ref=e29] [cursor=pointer]
+        - button "⚙️ Settings" [ref=e30] [cursor=pointer]
+      - generic [ref=e35]: $---
+    - generic [ref=e38]:
+      - generic [ref=e40]:
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - generic [ref=e49]: ✨
+        - heading "START CREATING WITH IMAGE STUDIO" [level=1] [ref=e50]:
+          - text: START CREATING WITH
+          - text: IMAGE STUDIO
+        - paragraph [ref=e51]: Describe a scene, character, mood, or style — and watch it come to life
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - button "Reference image" [ref=e56] [cursor=pointer]:
+            - img [ref=e57]
+          - textbox "Describe the image you want to create" [ref=e62]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - button "G Nano Banana" [ref=e66] [cursor=pointer]:
+              - generic [ref=e68]: G
+              - generic [ref=e69]: Nano Banana
+              - img [ref=e70]
+            - button "1:1" [ref=e73] [cursor=pointer]:
+              - img [ref=e74]
+              - generic [ref=e76]: 1:1
+            - generic [ref=e77]:
+              - button "1" [ref=e78] [cursor=pointer]
+              - button "2" [ref=e79] [cursor=pointer]
+              - button "3" [ref=e80] [cursor=pointer]
+              - button "4" [ref=e81] [cursor=pointer]
+          - button "Generate" [ref=e82] [cursor=pointer]:
+            - generic [ref=e83]: Generate

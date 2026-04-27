@@ -21,6 +21,7 @@ function createWindow() {
         height: 900,
         minWidth: 1024,
         minHeight: 640,
+        icon: path.join(__dirname, 'assets/logo.webp'),
         webPreferences: {
             webSecurity: false,
             contextIsolation: true,
@@ -30,7 +31,7 @@ function createWindow() {
         ...(isMac ? { titleBarStyle: 'hiddenInset' } : {}),
         backgroundColor: '#0d0d0d',
         show: false,
-        title: 'Open Generative AI',
+        title: 'VBO.AI',
     });
 
     const indexPath = path.join(__dirname, '../dist/index.html');

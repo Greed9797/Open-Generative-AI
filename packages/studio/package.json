@@ -23,9 +23,7 @@
     "react-syntax-highlighter": "^16.1.1",
     "react-toastify": "^11.1.0",
     "reactflow": "^11.11.4",
-    "remark-gfm": "^4.0.1",
-    "workflow-builder": "file:../Vibe-Workflow/packages/workflow-builder",
-    "ai-agent": "file:../Open-Poe-AI/packages/agents"
+    "remark-gfm": "^4.0.1"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

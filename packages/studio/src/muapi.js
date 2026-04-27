@@ -1,7 +1,6 @@
 import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getLipSyncModelById } from './models.js';
 
-const BASE_URL = 'https://api.muapi.ai';
-const PROXY_WF_BASE = '/api/workflow';
+const BASE_URL = '/api/proxy';
 
 async function pollForResult(requestId, key, maxAttempts = 900, interval = 2000) {
     const pollUrl = `${BASE_URL}/api/v1/predictions/${requestId}/result`;
@@ -54,9 +53,9 @@ export async function generateImage(apiKey, params) {
     if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
     if (params.resolution) payload.resolution = params.resolution;
     if (params.quality) payload.quality = params.quality;
-    if (params.image_url) { 
-        payload.image_url = params.image_url; 
-        payload.strength = params.strength || 0.6; 
+    if (params.image_url) {
+        payload.image_url = params.image_url;
+        payload.strength = params.strength || 0.6;
     } else if (params.images_list) {
         payload.images_list = params.images_list;
     } else {
@@ -142,13 +141,11 @@ export async function processLipSync(apiKey, params) {
 
 export function uploadFile(apiKey, file, onProgress) {
     return new Promise((resolve, reject) => {
-        const url = `${BASE_URL}/api/v1/upload_file`;
         const formData = new FormData();
         formData.append('file', file);
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', url);
-        xhr.setRequestHeader('x-api-key', apiKey);
+        xhr.open('POST', '/api/upload');
 
         if (onProgress) {
             xhr.upload.onprogress = (event) => {
@@ -189,399 +186,16 @@ export function uploadFile(apiKey, file, onProgress) {
     });
 }
 
-export async function getUserBalance(apiKey) {
-    const response = await fetch(`${BASE_URL}/api/v1/account/balance`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch balance: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-}
-
-export async function getTemplateWorkflows(apiKey) {
-    const response = await fetch(`${BASE_URL}/workflow/get-template-workflows`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch template workflows: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function getUserWorkflows(apiKey) {
-    const response = await fetch(`${BASE_URL}/workflow/get-workflow-defs`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch user workflows: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function getPublishedWorkflows(apiKey) {
-    const response = await fetch(`${BASE_URL}/workflow/get-published-workflows`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch published workflows: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-// Agents — uses direct URL → https://api.muapi.ai/agents/...
-export async function getTemplateAgents(apiKey) {
-    const response = await fetch(`${BASE_URL}/agents/templates/agents`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch template agents: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    const data = await response.json();
-    return Array.isArray(data) ? data : (data.agents || data.items || []);
-};
-
-export async function getUserAgents(apiKey) {
-    const response = await fetch(`${BASE_URL}/agents/user/agents`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch user agents: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    const data = await response.json();
-    return Array.isArray(data) ? data : (data.agents || data.items || []);
-};
-
-export async function getPublishedAgents(apiKey) {
-    // MuAPI: GET /agents/featured/agents
-    const response = await fetch(`${BASE_URL}/agents/featured/agents`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch featured agents: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    const data = await response.json();
-    return Array.isArray(data) ? data : (data.agents || data.items || []);
-};
-
-// GET /agents/user/conversations — returns the user's chat history across all agents
-export async function getUserConversations(apiKey) {
-    const response = await fetch(`${BASE_URL}/agents/user/conversations`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch conversations: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
-};
-
-export async function createWorkflow(apiKey, payload) {
-    const response = await fetch(`${BASE_URL}/workflow/create`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        },
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to create workflow: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function updateWorkflowName(apiKey, workflowId, name) {
-    const response = await fetch(`${BASE_URL}/workflow/update-name/${workflowId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        },
-        body: JSON.stringify({ name })
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to rename workflow: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function deleteWorkflow(apiKey, workflowId) {
-    const response = await fetch(`${BASE_URL}/workflow/delete-workflow-def/${workflowId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to delete workflow: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function getWorkflowInputs(apiKey, workflowId) {
-    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/api-inputs`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch workflow inputs: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function executeWorkflow(apiKey, workflowId, inputs) {
-    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/api-execute`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        },
-        body: JSON.stringify({ inputs })
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to execute workflow: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    const submitData = await response.json();
-    const runId = submitData.run_id || submitData.id;
-    if (!runId) return submitData;
-    
-    // Poll for results
-    return await pollWorkflowResult(runId, apiKey);
-};
-
-async function pollWorkflowResult(runId, apiKey, maxAttempts = 900, interval = 2000) {
-    const pollUrl = `${BASE_URL}/workflow/run/${runId}/api-outputs`;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, interval));
-        try {
-            const response = await fetch(pollUrl, {
-                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey }
-            });
-            if (!response.ok) {
-                if (response.status >= 500) continue;
-                throw new Error(`Poll Failed: ${response.status}`);
-            }
-            const data = await response.json();
-            const status = data.status?.toLowerCase();
-            if (status === 'completed' || status === 'succeeded' || status === 'success') return data;
-            if (status === 'failed' || status === 'error') throw new Error(`Workflow failed: ${data.error || 'Unknown error'}`);
-        } catch (error) {
-            if (attempt === maxAttempts) throw error;
-        }
-    }
-    throw new Error('Workflow timed out after polling.');
-};
-
-export async function getAllNodeSchemas(apiKey, workflowId) {
-    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/node-schemas`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch node schemas: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function getWorkflowData(apiKey, workflowId) {
-    const response = await fetch(`${BASE_URL}/workflow/get-workflow-def/${workflowId}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch workflow data: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-};
-
-export async function getNodeSchemas(apiKey, workflowId) {
-    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/api-node-schemas`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to fetch node schemas: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-}
-
-export async function runSingleNode(apiKey, workflowId, nodeId, payload) {
-    const response = await fetch(`${BASE_URL}/workflow/${workflowId}/node/${nodeId}/run`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        },
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to run single node: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-}
-
-export async function deleteNodeRun(apiKey, nodeRunId) {
-    const response = await fetch(`${BASE_URL}/workflow/node-run/${nodeRunId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to delete node run: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-}
-
-export async function getNodeStatus(apiKey, runId) {
-    const response = await fetch(`${BASE_URL}/workflow/run/${runId}/status`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        }
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to get node status: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-}
-
-/**
- * Handle proxy requests centralizing communication logic with MuAPI.
- * This is used by the server-side entry points.
- */
-export async function handleProxyRequest(prefix, path, method, headers, body, apiKey) {
-    const url = `${BASE_URL}/${prefix}/${path}`;
-    
-    const finalHeaders = new Headers(headers);
-    finalHeaders.delete('host');
-    finalHeaders.delete('connection');
-    finalHeaders.delete('content-length'); // Let fetch recalculate this for safety
-
-    if (apiKey) {
-        finalHeaders.set('x-api-key', apiKey);
-    }
-
-    try {
-        const response = await fetch(url, {
-            method,
-            headers: finalHeaders,
-            body: (method !== 'GET' && method !== 'HEAD') ? body : undefined,
-            redirect: 'follow',
-        });
-
-        const contentType = response.headers.get('Content-Type') || 'application/json';
-        const buffer = await response.arrayBuffer();
-        
-        return {
-            status: response.status,
-            contentType,
-            data: buffer
-        };
-    } catch (error) {
-        console.error(`MuAPI Proxy error for ${url}:`, error);
-        throw error;
-    }
-}
-
-/**
- * A centralized handler for Next.js API routes or middleware.
- */
-export async function handleServerSideProxy(prefix, request, params, apiKey) {
-    try {
-        const slug = await params;
-        const pathSegments = slug.path || [];
-        const path = pathSegments.join('/');
-        
-        const method = request.method;
-        let body = null;
-        if (method !== 'GET' && method !== 'HEAD') {
-            body = await request.arrayBuffer();
-        }
-
-        const { search } = new URL(request.url);
-        const pathWithSearch = search ? `${path}${search}` : path;
-
-        return await handleProxyRequest(
-            prefix, 
-            pathWithSearch, 
-            method, 
-            request.headers, 
-            body, 
-            apiKey
-        );
-    } catch (error) {
-        console.error(`Server proxy failed:`, error);
-        throw error;
-    }
-}
-
-export async function calculateDynamicCost(apiKey, taskName, payload) {
-    const response = await fetch(`${BASE_URL}/api/v1/app/calculate_dynamic_cost`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey
-        },
-        body: JSON.stringify({ task_name: taskName, payload })
-    });
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to calculate dynamic cost: ${response.status} - ${errText.slice(0, 100)}`);
-    }
-    return await response.json();
-}
+export async function getTemplateWorkflows() { return []; }
+export async function getUserWorkflows() { return []; }
+export async function getPublishedWorkflows() { return []; }
+export async function createWorkflow() { throw new Error('Workflow backend not configured'); }
+export async function updateWorkflowName() { throw new Error('Workflow backend not configured'); }
+export async function deleteWorkflow() { throw new Error('Workflow backend not configured'); }
+export async function getWorkflowInputs() { return {}; }
+export async function executeWorkflow() { throw new Error('Workflow backend not configured'); }
+export async function getAllNodeSchemas() { return {}; }
+export async function getWorkflowData() { return null; }
+export async function getNodeSchemas() { return {}; }
+export async function runSingleNode() { throw new Error('Workflow backend not configured'); }
+export async function deleteNodeRun() { return {}; }

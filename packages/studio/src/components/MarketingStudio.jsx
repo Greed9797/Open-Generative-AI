@@ -22,7 +22,7 @@ const SCROLLBAR_STYLE = `
 // ── Icons ────────────────────────────────────────────────────────────────────
 
 const CheckSvg = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" strokeWidth="4">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF4500" strokeWidth="4">
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
@@ -102,7 +102,7 @@ function UploadSlot({ icon, url, progress, label, onUpload, onClear, multiple = 
     <div className="relative group/slot flex items-center">
       <div 
         onClick={() => inputRef.current?.click()}
-        title={`Upload ${label}`}
+        title={`Enviar ${label}`}
         className={`relative w-10 h-10 rounded-full border transition-all flex items-center justify-center cursor-pointer ${
           url ? 'border-primary/40 bg-primary/5' : 'border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20'
         }`}
@@ -247,6 +247,7 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
     duration: 5
   });
 
+  const [adMode, setAdMode] = useState("product"); // 'product' | 'app'
   const [history, setHistory] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [dropdown, setDropdown] = useState(null); // 'format' | 'avatar' | 'ratio' | 'res' | 'duration'
@@ -324,8 +325,8 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
   };
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return alert("Please enter an ad script.");
-    if (!productImage) return alert("Please upload a product image.");
+    if (!prompt.trim()) return alert("Por favor, insira um roteiro para o anúncio.");
+    if (!productImage) return alert("Por favor, faça upload de uma imagem do produto.");
 
     setIsGenerating(true);
     try {
@@ -350,7 +351,7 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
         setFullscreenUrl(result.url);
       }
     } catch (err) {
-      alert("Generation failed: " + err.message);
+      alert("Falha na geração: " + err.message);
     } finally {
       setIsGenerating(false);
     }
@@ -386,7 +387,7 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
                    <button
                     onClick={(e) => { e.stopPropagation(); downloadFile(entry.url, `marketing-ad-${entry.id}.mp4`); }}
                     className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
-                    title="Download"
+                    title="Baixar"
                    >
                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -407,34 +408,48 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
             ))}
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center animate-fade-in-up transition-all duration-700">
-             <div className="mb-12 relative group">
-                <div className="absolute inset-0 bg-primary/10 blur-[120px] rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-1000" />
-                <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white/[0.02] rounded-[2rem] flex items-center justify-center border border-white/[0.05] overflow-hidden backdrop-blur-sm">
-                  <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10 relative z-10 transition-transform duration-500 group-hover:scale-110 shadow-inner">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d9ff00" strokeWidth="1.5">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                      <line x1="8" y1="21" x2="16" y2="21" />
-                      <line x1="12" y1="17" x2="12" y2="21" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 text-center px-4">
-                <span className="text-white/40 font-medium uppercase tracking-widest">START CREATING WITH</span>
-                <br />
-                <span className="text-white uppercase tracking-tight">MARKETING STUDIO</span>
+          <div className="relative h-full flex flex-col items-center justify-center animate-fade-in-up transition-all duration-700 min-h-[55vh]">
+            {/* Strong top atmospheric glow — orange/warm like Higgsfield's pink */}
+            <div className="absolute pointer-events-none overflow-hidden" aria-hidden="true" style={{ top: '-30%', left: '-20%', right: '-20%', height: '85%', background: 'radial-gradient(ellipse 75% 75% at 50% 0%, rgba(255,69,0,0.28) 0%, rgba(180,35,70,0.14) 35%, transparent 65%)', filter: 'blur(0px)' }} />
+
+            <div className="relative z-10 flex flex-col items-center gap-3 px-4 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">ESTÚDIO DE MARKETING</p>
+              <h1 className="font-black uppercase text-white" style={{ fontSize: 'clamp(38px, 6vw, 86px)', lineHeight: '0.93', letterSpacing: '-0.02em' }}>
+                TRANSFORME QUALQUER PRODUTO<br />EM UM ANÚNCIO
               </h1>
-              <p className="text-white/40 text-sm md:text-base font-medium tracking-wide text-center max-w-lg leading-relaxed px-6">
-                Describe your scene, upload your product, and watch high-converting AI video ads come to life.
-              </p>
+            </div>
           </div>
         )}
       </div>
 
       {/* ── BOTTOM PROMPT BAR ── */}
       <div style={{ animationDelay: "0.2s" }} className="absolute bottom-4 w-full max-w-[95%] lg:max-w-4xl z-40 animate-fade-in-up">
-        <div className="bg-[#0a0a0a]/80 backdrop-blur-3xl rounded-lg border border-white/10 p-4 flex flex-col gap-2 shadow-4xl">
+        <div className="bg-[#0a0a0a]/85 backdrop-blur-3xl rounded-xl border border-white/[0.08] shadow-2xl flex items-stretch overflow-hidden">
+
+          {/* LEFT: Product / App mode toggle */}
+          <div className="flex flex-col gap-0.5 p-2 border-r border-white/[0.06] shrink-0 justify-center">
+            <button
+              onClick={() => setAdMode("product")}
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-lg transition-all ${adMode === "product" ? "bg-white/[0.08] text-white" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"}`}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 8l-2-2H5L3 8v10a2 2 0 002 2h14a2 2 0 002-2V8z" /><path d="M3 10h18" /><path d="M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+              </svg>
+              <span className="text-[8px] font-bold uppercase tracking-wide">Produto</span>
+            </button>
+            <button
+              onClick={() => setAdMode("app")}
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-lg transition-all ${adMode === "app" ? "bg-white/[0.08] text-white" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"}`}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+              <span className="text-[8px] font-bold uppercase tracking-wide">App</span>
+            </button>
+          </div>
+
+          {/* RIGHT: existing content */}
+          <div className="flex-1 flex flex-col gap-2 p-3 md:p-4 min-w-0">
           {additionalImages.length > 0 && (
             <div className="flex items-center gap-1.5">
               {additionalImages.map((img, idx) => (
@@ -457,36 +472,36 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onInput={handleTextareaInput}
-              placeholder="Describe your ad script... Use @image1 for product, @image2 for avatar."
+              placeholder="Descreva o que acontece no anúncio..."
               rows={1}
               className="w-full bg-transparent border-none text-white text-sm placeholder:text-white/20 focus:outline-none resize-none pt-1 leading-relaxed min-h-[44px] max-h-[300px] custom-scrollbar font-medium"
             />
           </div>
 
           {/* Bottom Row: Uploads + Controls + Generate */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-white/[0.05]">
-            <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar-thin">
+            <div className="flex items-center gap-2 shrink-0">
               
               {/* Asset Uploads Group */}
               <div className="flex items-center gap-1.5 pr-3 border-r border-white/10">
-                <UploadSlot 
-                  label="Product" 
-                  icon={<ProductIcon />} 
-                  url={productImage} 
-                  progress={uploadProgress.product} 
-                  onUpload={(e) => handleUpload(e, 'product')} 
-                  onClear={() => setProductImage(null)} 
+                <UploadSlot
+                  label="Produto"
+                  icon={<ProductIcon />}
+                  url={productImage}
+                  progress={uploadProgress.product}
+                  onUpload={(e) => handleUpload(e, 'product')}
+                  onClear={() => setProductImage(null)}
                 />
-                <UploadSlot 
-                  label="Avatar" 
-                  icon={<AvatarIcon />} 
-                  url={avatarImage} 
-                  progress={uploadProgress.avatar} 
-                  onUpload={(e) => handleUpload(e, 'avatar')} 
-                  onClear={() => setAvatarImage(null)} 
+                <UploadSlot
+                  label="Avatar"
+                  icon={<AvatarIcon />}
+                  url={avatarImage}
+                  progress={uploadProgress.avatar}
+                  onUpload={(e) => handleUpload(e, 'avatar')}
+                  onClear={() => setAvatarImage(null)}
                 />
-                <UploadSlot 
-                  label="References" 
+                <UploadSlot
+                  label="Referências" 
                   icon={<RefIcon />} 
                   url={additionalImages[0]} 
                   progress={uploadProgress.additional} 
@@ -517,7 +532,7 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
                 </button>
                 <Dropdown 
                   isOpen={dropdown === 'format'} 
-                  title="Video Format Presets"
+                  title="Presets de Formato de Vídeo"
                   items={ASSETS.ugc} 
                   selectedId={params.format}
                   onSelect={(item) => setParams({ ...params, format: item.name, videoUrl: item.url })}
@@ -536,13 +551,13 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
                     <img src={avatarImage || ASSETS.avatar[0].url} className="w-full h-full object-cover" />
                   </div>
                   <span className="text-sm font-bold text-white/70 group-hover:text-primary transition-colors">
-                    {ASSETS.avatar.find(a => a.url === avatarImage)?.name || "Select Avatar"}
+                    {ASSETS.avatar.find(a => a.url === avatarImage)?.name || "Selecionar Avatar"}
                   </span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className="opacity-20 group-hover:opacity-100 transition-opacity"><path d="M6 9l6 6 6-6" /></svg>
                 </button>
                 <Dropdown 
                   isOpen={dropdown === 'avatar'} 
-                  title="Avatar Presets"
+                  title="Presets de Avatar"
                   items={ASSETS.avatar} 
                   selectedId={avatarImage}
                   onSelect={(item) => setAvatarImage(item.url)}
@@ -561,7 +576,7 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
                   </button>
                   <SimpleDropdown 
                     isOpen={dropdown === key} 
-                    title={key === 'res' ? 'Resolution' : key.toUpperCase()} 
+                    title={key === 'res' ? 'Resolução' : key.toUpperCase()} 
                     options={OPTIONS[key]} 
                     selected={params[key]} 
                     onSelect={(val) => setParams({ ...params, [key]: val })} 
@@ -574,24 +589,25 @@ export default function MarketingStudio({ apiKey, droppedFiles, onFilesHandled }
             <button
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="bg-primary text-black px-8 py-2.5 rounded font-bold text-base hover:bg-[#e5ff33] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-glow disabled:opacity-50 disabled:grayscale z-10"
+              className="shrink-0 bg-primary text-black px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-widest hover:bg-[#e03c00] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale z-10"
+              style={{ boxShadow: '0 0 20px rgba(255,69,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)' }}
             >
               {isGenerating ? (
                 <>
                   <div className="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                  Generating...
+                  Gerando...
                 </>
               ) : (
                 <>
-                  <span>Launch</span>
+                  <span>Gerar</span>
                   <div className="flex items-center gap-1 border-l border-black/10 pl-3">
-                    <span className="text-[10px] opacity-70">{params.res === '1080p' ? params.duration * 0.675 : params.duration * 0.3}</span>
-                    <span className="text-[8px] font-black opacity-40">$</span>
+                    <span className="text-[10px] opacity-70">→ ${params.res === '1080p' ? params.duration * 0.675 : params.duration * 0.3}</span>
                   </div>
                 </>
               )}
             </button>
           </div>
+        </div>
         </div>
       </div>
 

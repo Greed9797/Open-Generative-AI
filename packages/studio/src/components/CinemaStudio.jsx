@@ -382,7 +382,7 @@ function CameraControlsOverlay({
         <div className="flex items-center justify-between mb-8">
           <div className="flex flex-col gap-1">
             <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">
-              Camera Config
+              Config. de Câmera
             </h2>
             <div className="h-[1px] w-12 bg-primary/40" />
           </div>
@@ -406,28 +406,28 @@ function CameraControlsOverlay({
         {/* Scroll columns */}
         <div className="w-full flex justify-start md:justify-center gap-3 md:gap-6 py-4 md:py-8 overflow-x-auto no-scrollbar snap-x px-4 md:px-0">
           <ScrollColumn
-            title="Camera"
+            title="Câmera"
             items={CAMERAS}
             columnKey="camera"
             value={settings.camera}
             onChange={updateSetting("camera")}
           />
           <ScrollColumn
-            title="Lens"
+            title="Lente"
             items={LENSES}
             columnKey="lens"
             value={settings.lens}
             onChange={updateSetting("lens")}
           />
           <ScrollColumn
-            title="Focal Length"
+            title="Distância Focal"
             items={FOCAL_LENGTHS}
             columnKey="focal"
             value={settings.focal}
             onChange={updateSetting("focal")}
           />
           <ScrollColumn
-            title="Aperture"
+            title="Abertura"
             items={APERTURES}
             columnKey="aperture"
             value={settings.aperture}
@@ -469,6 +469,8 @@ export default function CinemaStudio({
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const imageInputRef = useRef(null);
   const [activeHistoryIndex, setactiveHistoryIndex] = useState(null);
+  const [generationMode, setGenerationMode] = useState("image");
+  const [batchSize, setBatchSize] = useState(1);
 
   // ── Internal history state (used when historyItems prop is not provided) ──
   const [internalHistory, setInternalHistory] = useState([]);
@@ -632,7 +634,7 @@ export default function CinemaStudio({
       }
     } catch (e) {
       console.error(e);
-      alert("Generation Failed: " + e.message);
+      alert("Falha na geração: " + e.message);
     } finally {
       setIsGenerating(false);
     }
@@ -717,12 +719,12 @@ export default function CinemaStudio({
             {history.map((entry, idx) => (
               <div
                 key={entry.timestamp ?? idx}
-                className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-[#d9ff00]/50 transition-all duration-300 flex flex-col cursor-pointer"
+                className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-[#FF4500]/50 transition-all duration-300 flex flex-col cursor-pointer"
                 onClick={() => loadHistoryItem(entry, idx)}
               >
                 <img
                   src={entry.url}
-                  alt={`History item ${idx + 1}`}
+                  alt={`Item do histórico ${idx + 1}`}
                   className="w-full aspect-[4/3] object-cover bg-black/40"
                 />
                 
@@ -730,12 +732,12 @@ export default function CinemaStudio({
                 <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     type="button"
-                    title="Fullscreen"
+                    title="Tela cheia"
                     onClick={(e) => {
                       e.stopPropagation();
                       setFullscreenUrl(entry.url);
                     }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-[#d9ff00] hover:text-black transition-all border border-white/10"
+                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-[#FF4500] hover:text-black transition-all border border-white/10"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="15 3 21 3 21 9" />
@@ -746,7 +748,7 @@ export default function CinemaStudio({
                   </button>
                   <button
                     type="button"
-                    title="Download"
+                    title="Baixar"
                     onClick={async (e) => {
                       e.stopPropagation();
                       try {
@@ -764,7 +766,7 @@ export default function CinemaStudio({
                         window.open(entry.url, "_blank");
                       }
                     }}
-                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-[#d9ff00] hover:text-black transition-all border border-white/10"
+                    className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-[#FF4500] hover:text-black transition-all border border-white/10"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -775,10 +777,10 @@ export default function CinemaStudio({
                 {/* Details */}
                 <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
                   <p className="text-white/70 text-xs line-clamp-3 leading-relaxed">
-                    {entry.settings?.prompt || "No prompt"}
+                    {entry.settings?.prompt || "Sem prompt"}
                   </p>
                   <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
-                    <span className="text-[10px] font-bold text-[#d9ff00] px-2 py-0.5 bg-[#d9ff00]/10 rounded border border-[#d9ff00]/20">
+                    <span className="text-[10px] font-bold text-[#FF4500] px-2 py-0.5 bg-[#FF4500]/10 rounded border border-[#FF4500]/20">
                       {entry.settings?.camera || "Standard"}
                     </span>
                     <div className="flex gap-2">
@@ -793,203 +795,180 @@ export default function CinemaStudio({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center px-4 animate-fade-in-up transition-all duration-700 min-h-[50vh]">
-            <div className="mb-12 relative group">
-              <div className="absolute inset-0 bg-primary/10 blur-[120px] rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-1000" />
-              <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white/[0.02] rounded-[2rem] flex items-center justify-center border border-white/[0.05] overflow-hidden backdrop-blur-sm">
-                <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10 relative z-10 transition-transform duration-500 group-hover:scale-110">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary opacity-80">
-                    <path d="M23 7l-7 5 7 5V7z" />
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-                  </svg>
-                </div>
-                <div className="absolute top-4 right-4 text-[10px] text-primary/40 animate-pulse">REC</div>
-              </div>
+          <div className="relative flex flex-col items-center justify-center h-full text-center px-4 animate-fade-in-up transition-all duration-700 min-h-[60vh]">
+            {/* Atmospheric glow */}
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true" style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(79,195,247,0.07) 0%, rgba(255,69,0,0.04) 55%, transparent 80%)', filter: 'blur(40px)' }} />
+
+            {/* Corner guide marks */}
+            <div className="absolute hidden md:block" style={{ top: '10%', left: '10%', width: 20, height: 20, borderTop: '1.5px solid rgba(255,255,255,0.12)', borderLeft: '1.5px solid rgba(255,255,255,0.12)' }} />
+            <div className="absolute hidden md:block" style={{ top: '10%', right: '10%', width: 20, height: 20, borderTop: '1.5px solid rgba(255,255,255,0.12)', borderRight: '1.5px solid rgba(255,255,255,0.12)' }} />
+            <div className="absolute hidden md:block" style={{ bottom: '32%', left: '10%', width: 20, height: 20, borderBottom: '1.5px solid rgba(255,255,255,0.12)', borderLeft: '1.5px solid rgba(255,255,255,0.12)' }} />
+            <div className="absolute hidden md:block" style={{ bottom: '32%', right: '10%', width: 20, height: 20, borderBottom: '1.5px solid rgba(255,255,255,0.12)', borderRight: '1.5px solid rgba(255,255,255,0.12)' }} />
+
+            <div className="relative z-10 flex flex-col items-center gap-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/25">ESTÚDIO CINEMA</p>
+              <h1 className="font-black text-center leading-[1.02] tracking-tight" style={{ fontSize: 'clamp(34px, 5.5vw, 78px)' }}>
+                <span className="bg-gradient-to-b from-white via-white/90 to-white/35 bg-clip-text text-transparent">
+                  O que você filmaria<br />com orçamento infinito?
+                </span>
+              </h1>
             </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 text-center px-4">
-              <span className="text-white/40 font-medium">START CREATING WITH</span><br />
-              <span className="text-white uppercase tracking-wider">Cinema Studio</span>
-            </h1>
-            <p className="text-white/40 text-sm md:text-base font-medium tracking-wide text-center max-w-lg leading-relaxed">
-              What would you shoot with infinite budget?
-            </p>
           </div>
         )}
       </div>
 
       {/* ── BOTTOM PROMPT BAR ── */}
-      <div className="absolute bottom-4 left-4 right-4 md:left-0 md:right-0 md:mx-auto md:max-w-[95%] lg:max-w-4xl z-30 transition-all duration-700 animate-fade-in-up">
-        <div className="bg-[#0a0a0a]/80 backdrop-blur-3xl border border-white/10 rounded-md p-4 flex justify-between shadow-2xl items-end relative gap-2">
-          {/* Left Column */}
-          <div className="flex-1 flex flex-col gap-3 min-h-[80px] justify-between py-1">
-            {/* Input Row */}
-            <div className="flex items-start gap-4 w-full px-1">
-              {/* Image Upload Button */}
-              <div className="relative pt-0.5">
-                <input
-                  type="file"
-                  ref={imageInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
-                
-                <button
-                  onClick={() =>
-                    uploadedImage
-                      ? removeImage()
-                      : imageInputRef.current?.click()
-                  }
-                  disabled={isUploadingImage}
-                  className={`w-10 h-10 shrink-0 rounded-full border transition-all flex items-center justify-center relative overflow-hidden ${uploadedImage ? "border-primary/60 bg-white/5" : "bg-white/[0.03] border-white/[0.03] hover:bg-white/10 hover:border-primary/40"} group`}
-                >
-                  {isUploadingImage ? (
-                    <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-black/80 z-20 backdrop-blur-[2px]">
-                      <svg className="w-8 h-8 -rotate-90">
-                        <circle
-                          cx="16"
-                          cy="16"
-                          r="14"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          fill="transparent"
-                          className="text-white/10"
-                        />
-                        <circle
-                          cx="16"
-                          cy="16"
-                          r="14"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          fill="transparent"
-                          strokeDasharray={88}
-                          strokeDashoffset={88 - (88 * imageUploadProgress) / 100}
-                          className="text-primary transition-all duration-300"
-                        />
-                      </svg>
-                      <span className="absolute text-[8px] font-bold text-white">
-                        {imageUploadProgress}%
-                      </span>
+      <div className="absolute bottom-4 left-4 right-4 md:left-0 md:right-0 md:mx-auto md:max-w-[95%] lg:max-w-4xl z-30 animate-fade-in-up">
+        <div className="bg-[#0a0a0a]/85 backdrop-blur-3xl border border-white/[0.08] rounded-xl shadow-2xl flex items-stretch overflow-hidden">
+
+          {/* LEFT: Image / Video mode toggle */}
+          <div className="flex flex-col gap-0.5 p-2 border-r border-white/[0.06] shrink-0 justify-center">
+            <button
+              onClick={() => setGenerationMode("image")}
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-lg transition-all ${generationMode === "image" ? "bg-white/[0.08] text-white" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"}`}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <span className="text-[8px] font-bold uppercase tracking-wide">Imagem</span>
+            </button>
+            <button
+              onClick={() => setGenerationMode("video")}
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-lg transition-all ${generationMode === "video" ? "bg-white/[0.08] text-white" : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"}`}
+              title="Vídeo em breve"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="23 7 16 12 23 17 23 7" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+              <span className="text-[8px] font-bold uppercase tracking-wide">Vídeo</span>
+            </button>
+          </div>
+
+          {/* CENTER: input + chips */}
+          <div className="flex-1 flex flex-col gap-2 p-3 min-w-0">
+            {/* Input row */}
+            <div className="flex items-start gap-3">
+              <input
+                type="file"
+                ref={imageInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+              <button
+                onClick={() => uploadedImage ? removeImage() : imageInputRef.current?.click()}
+                disabled={isUploadingImage}
+                className={`w-8 h-8 shrink-0 rounded-full border transition-all flex items-center justify-center relative overflow-hidden mt-0.5 ${uploadedImage ? "border-primary/50 bg-primary/10" : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20"} group`}
+              >
+                {isUploadingImage ? (
+                  <span className="text-[8px] font-bold text-primary">{imageUploadProgress}%</span>
+                ) : uploadedImage ? (
+                  <div className="relative w-full h-full">
+                    <img src={uploadedImage} alt="Ref" className="w-full h-full object-cover opacity-80 group-hover:opacity-40 transition-opacity" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12" /></svg>
                     </div>
-                  ) : uploadedImage ? (
-                    <div className="relative w-full h-full group">
-                      <img
-                        src={uploadedImage}
-                        alt="Reference"
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-40 transition-opacity"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-white">
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      </div>
-                    </div>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/40 group-hover:text-white transition-colors">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                  )}
-                </button>
-              </div>
+                  </div>
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/30 group-hover:text-white/70 transition-colors">
+                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                )}
+              </button>
 
               <textarea
                 ref={textareaRef}
-                placeholder="Describe your cinema scene..."
-                className="w-full bg-transparent border-none text-white text-sm placeholder:text-white/10 focus:outline-none resize-none pt-1 leading-relaxed min-h-[40px] max-h-[150px] md:max-h-[250px] overflow-y-auto custom-scrollbar disabled:opacity-40"
+                placeholder="Descreva sua cena cinematográfica..."
+                className="flex-1 bg-transparent border-none text-white text-sm placeholder:text-white/20 focus:outline-none resize-none pt-0.5 leading-relaxed min-h-[36px] max-h-[140px] overflow-y-auto custom-scrollbar"
                 rows={1}
                 onInput={handleTextareaInput}
               />
             </div>
-            <div className="flex justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Aspect Ratio Button */}
-                <div className="relative">
-                  <button
-                    ref={arBtnRef}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-white/[0.03] hover:bg-white/10 text-xs font-bold text-white/40 hover:text-white transition-colors rounded-md border border-white/[0.03]"
-                    onClick={() =>
-                      setOpenDropdown((d) => (d === "ar" ? null : "ar"))
-                    }
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40">
-                      <rect x="2" y="7" width="20" height="10" rx="2" ry="2" />
-                    </svg>
-                    {settings.aspect_ratio}
-                  </button>
-                  {openDropdown === "ar" && (
-                    <Dropdown
-                      items={ASPECT_RATIOS}
-                      selected={settings.aspect_ratio}
-                      onSelect={(val) =>
-                        setSettings((prev) => ({ ...prev, aspect_ratio: val }))
-                      }
-                      triggerRef={arBtnRef}
-                      onClose={() => setOpenDropdown(null)}
-                    />
-                  )}
-                </div>
 
-                {/* Resolution Button */}
-                <div className="relative">
-                  <button
-                    ref={resBtnRef}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-white/[0.03] hover:bg-white/10 text-xs font-bold text-white/40 hover:text-white transition-colors rounded-md border border-white/[0.03]"
-                    onClick={() =>
-                      setOpenDropdown((d) => (d === "res" ? null : "res"))
-                    }
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40">
-                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                    </svg>
-                    {resolution}
-                  </button>
-                  {openDropdown === "res" && (
-                    <Dropdown
-                      items={RESOLUTIONS}
-                      selected={resolution}
-                      onSelect={setResolution}
-                      triggerRef={resBtnRef}
-                      onClose={() => setOpenDropdown(null)}
-                    />
-                  )}
-                </div>
+            {/* Chips row */}
+            <div className="flex items-center gap-2 flex-wrap border-t border-white/[0.05] pt-2">
+              {/* Camera chip */}
+              <button
+                onClick={() => setIsOverlayOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition-all whitespace-nowrap"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-60">
+                  <circle cx="12" cy="12" r="3" /><path d="M20 7h-3l-2-3H9L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                </svg>
+                Câmeras Cinematográficas
+              </button>
+
+              {/* Count control */}
+              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white/[0.04] border border-white/[0.06] rounded-full">
+                <button onClick={() => setBatchSize(b => Math.max(1, b - 1))} className="text-white/40 hover:text-white transition-colors text-xs leading-none w-3">←</button>
+                <span className="text-[11px] font-semibold text-white/50 px-1.5">{batchSize}/4</span>
+                <button onClick={() => setBatchSize(b => Math.min(4, b + 1))} className="text-white/40 hover:text-white transition-colors text-xs leading-none">+</button>
               </div>
-              <div className="flex items-center gap-3 h-full self-end mb-1">
-                {/* Summary Card (triggers overlay) */}
-                <button
-                  className="flex flex-col items-start justify-center px-4 py-1.5 bg-white/[0.03] rounded-md border border-white/[0.03] hover:border-white/20 transition-all text-left flex-1 min-w-[100px] md:min-w-[160px] max-w-[240px] h-[50px] relative group overflow-hidden"
-                  onClick={() => setIsOverlayOpen(true)}
-                >
-                  <div className="absolute top-3 right-3 w-1.5 h-1.5 bg-[#d9ff00] rounded-full shadow-lg shadow-[#d9ff00]/20" />
-                  <span className="text-[9px] font-bold text-white/30 uppercase truncate w-full tracking-wider group-hover:text-white transition-colors">
-                    {settings.camera}
-                  </span>
-                  <span className="text-xs font-semibold text-white/70 truncate w-full group-hover:text-[#d9ff00] transition-colors">
-                    {formatSummaryValue()}
-                  </span>
-                </button>
 
-                {/* Generate Button */}
+              {/* Aspect Ratio */}
+              <div className="relative">
                 <button
-                  className="h-[50px] px-8 bg-[#d9ff00] text-black rounded-md font-medium text-sm hover:bg-[#e5ff33] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#d9ff00]/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isGenerating || !settings.prompt.trim()}
-                  onClick={handleGenerate}
+                  ref={arBtnRef}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition-all"
+                  onClick={() => setOpenDropdown((d) => (d === "ar" ? null : "ar"))}
                 >
-                  {isGenerating ? (
-                    <>
-                      <span className="animate-spin inline-block text-black">◌</span> SHOOTING...
-                    </>
-                  ) : (
-                    <>
-                      <span>SHOOT</span>
-                    </>
-                  )}
+                  {settings.aspect_ratio}
                 </button>
+                {openDropdown === "ar" && (
+                  <Dropdown
+                    items={ASPECT_RATIOS}
+                    selected={settings.aspect_ratio}
+                    onSelect={(val) => setSettings((prev) => ({ ...prev, aspect_ratio: val }))}
+                    triggerRef={arBtnRef}
+                    onClose={() => setOpenDropdown(null)}
+                  />
+                )}
+              </div>
+
+              {/* Resolution */}
+              <div className="relative">
+                <button
+                  ref={resBtnRef}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-full text-[11px] font-semibold text-white/50 hover:text-white/80 transition-all"
+                  onClick={() => setOpenDropdown((d) => (d === "res" ? null : "res"))}
+                >
+                  {resolution}
+                </button>
+                {openDropdown === "res" && (
+                  <Dropdown
+                    items={RESOLUTIONS}
+                    selected={resolution}
+                    onSelect={setResolution}
+                    triggerRef={resBtnRef}
+                    onClose={() => setOpenDropdown(null)}
+                  />
+                )}
               </div>
             </div>
-          </div>  
+          </div>
+
+          {/* RIGHT: Generate button */}
+          <button
+            className="w-[110px] flex flex-col items-center justify-center gap-0.5 bg-[#FF4500] text-black font-black text-[11px] uppercase tracking-widest hover:bg-[#e03c00] active:scale-[0.98] transition-all shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)' }}
+            disabled={isGenerating || !settings.prompt.trim()}
+            onClick={handleGenerate}
+          >
+            {isGenerating ? (
+              <>
+                <span className="animate-spin text-base">◌</span>
+                <span className="text-[9px] tracking-widest">Gerando</span>
+              </>
+            ) : (
+              <>
+                <span>GERAR</span>
+                <span className="text-[9px] font-bold opacity-60">→ {batchSize}</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
       {fullscreenUrl && (
@@ -1012,12 +991,12 @@ export default function CinemaStudio({
           </button>
           <img 
             src={fullscreenUrl} 
-            alt="Fullscreen Preview" 
-            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
+            alt="Visualização em tela cheia"
+            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-      )}  
+      )}
       {/* ── Camera Controls Overlay ── */}
       <CameraControlsOverlay
         isOpen={isOverlayOpen}

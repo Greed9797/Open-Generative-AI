@@ -11,9 +11,12 @@ export function Sidebar() {
   element.style.background = 'var(--bg-panel)';
 
   // Logo
-  const logo = document.createElement('div');
-  logo.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white"/><path d="M2 17L12 22L22 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  logo.className = 'mb-10 text-primary';
+  const logo = document.createElement('img');
+  logo.src = '/logo.webp';
+  logo.alt = 'VBO.AI';
+  logo.width = 32;
+  logo.height = 32;
+  logo.className = 'mb-10';
   element.appendChild(logo);
 
   const navItems = [

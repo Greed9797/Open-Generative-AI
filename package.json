@@ -1,12 +1,10 @@
 {
-  "name": "open-generative-ai",
-  "description": "Open-source alternative to Higgsfield AI — AI image, video, cinema and lip sync studio",
+  "name": "vbo-ai",
+  "description": "Nova alternativa ao Higgsfield AI — estúdio de imagem, vídeo, cinema e lip sync com IA. VBO é a nova IA com Agentes de IA e Fluxos de Trabalho Automáticos. Conecte sua chave de API e aproveite o melhor criador de vídeo com Agentes do mundo.",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.1",
   "workspaces": [
-    "packages/studio",
-    "packages/Vibe-Workflow/packages/workflow-builder",
-    "packages/Open-Poe-AI/packages/agents"
+    "packages/studio"
   ],
   "scripts": {
     "dev": "next dev",
@@ -14,9 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "build:studio": "npm run build -w studio",
-    "build:workflow": "npm run build -w workflow-builder",
-    "build:agent": "npm run build -w ai-agent",
-    "build:packages": "npm run build:workflow && npm run build:agent && npm run build:studio",
+    "build:packages": "npm run build:studio",
     "setup": "npm install && npm run build:packages",
     "vite:dev": "vite",
     "vite:build": "vite build",
@@ -27,8 +23,8 @@
     "electron:build:all": "vite build && electron-builder --mac --win --linux"
   },
   "build": {
-    "appId": "ai.generative.open",
-    "productName": "Open Generative AI",
+    "appId": "ai.vbo.agent",
+    "productName": "VBO.AI",
     "copyright": "Copyright © 2025",
     "directories": {
       "output": "release"
@@ -71,7 +67,7 @@
     "linux": {
       "icon": "public/banner.png",
       "category": "Utility",
-      "maintainer": "Open Generative AI Team",
+      "maintainer": "VBO.AI Team",
       "extraFiles": [
         {
           "from": "build/linux/apparmor.profile",
@@ -95,14 +91,14 @@
     }
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.104.1",
     "axios": "^1.7.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",
-    "studio": "*",
-    "workflow-builder": "file:./packages/Vibe-Workflow/packages/workflow-builder",
-    "ai-agent": "file:./packages/Open-Poe-AI/packages/agents"
+    "studio": "*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -113,7 +109,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.0.0",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.2.2",
+    "tailwindcss": "^3.4.19",
     "vite": "^5.4.0"
   },
   "main": "electron/main.js"

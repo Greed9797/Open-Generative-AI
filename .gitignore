@@ -30,6 +30,11 @@ release/
 # Next.js
 .next/
 out/
+.hyperframes-renders/
+.agent-jobs/
+.agent-frames/
+public/renders/*.mp4
+public/agent-uploads/*
 
 # Misc
 *.pem

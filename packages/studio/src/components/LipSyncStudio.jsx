@@ -60,8 +60,8 @@ function MediaPickerButton({
       type="button"
       title={
         uploadState === UPLOAD_STATE.READY
-          ? `${fileName} — click to clear`
-          : `Upload ${label.toLowerCase()} file`
+          ? `${fileName} — clique para limpar`
+          : `Fazer upload do arquivo de ${label.toLowerCase()}`
       }
       onClick={handleClick}
       className={`flex-shrink-0 w-10 h-10 rounded-full border transition-all flex items-center justify-center relative overflow-hidden group ${borderClass}`}
@@ -256,7 +256,7 @@ function HistoryThumb({ entry, isActive, onSelect, onDownload }) {
             onDownload(entry);
           }}
           className="p-1.5 bg-primary rounded-lg text-black hover:scale-110 transition-transform"
-          title="Download"
+          title="Baixar"
         >
           <svg
             width="12"
@@ -471,7 +471,7 @@ export default function LipSyncStudio({
   const handleImageUpload = useCallback(
     async (file) => {
       if (file.size > 10 * 1024 * 1024) {
-        alert("Image exceeds 10MB limit.");
+        alert("A imagem excede o limite de 10MB.");
         return;
       }
       setImageState(UPLOAD_STATE.UPLOADING);
@@ -485,7 +485,7 @@ export default function LipSyncStudio({
         setImageState(UPLOAD_STATE.READY);
       } catch (err) {
         setImageState(UPLOAD_STATE.IDLE);
-        alert(`Image upload failed: ${err.message}`);
+        alert(`Falha no upload da imagem: ${err.message}`);
       } finally {
         setImageProgress(0);
       }
@@ -496,7 +496,7 @@ export default function LipSyncStudio({
   const handleVideoPick = useCallback(
     async (file) => {
       if (file.size > 50 * 1024 * 1024) {
-        alert("Video exceeds 50MB limit.");
+        alert("O vídeo excede o limite de 50MB.");
         return;
       }
       setVideoState(UPLOAD_STATE.UPLOADING);
@@ -510,7 +510,7 @@ export default function LipSyncStudio({
         setVideoState(UPLOAD_STATE.READY);
       } catch (err) {
         setVideoState(UPLOAD_STATE.IDLE);
-        alert(`Video upload failed: ${err.message}`);
+        alert(`Falha no upload do vídeo: ${err.message}`);
       } finally {
         setVideoProgress(0);
       }
@@ -521,7 +521,7 @@ export default function LipSyncStudio({
   const handleAudioPick = useCallback(
     async (file) => {
       if (file.size > 10 * 1024 * 1024) {
-        alert("Audio file exceeds 10MB limit.");
+        alert("O arquivo de áudio excede o limite de 10MB.");
         return;
       }
       setAudioState(UPLOAD_STATE.UPLOADING);
@@ -535,7 +535,7 @@ export default function LipSyncStudio({
         setAudioState(UPLOAD_STATE.READY);
       } catch (err) {
         setAudioState(UPLOAD_STATE.IDLE);
-        alert(`Audio upload failed: ${err.message}`);
+        alert(`Falha no upload do áudio: ${err.message}`);
       } finally {
         setAudioProgress(0);
       }
@@ -616,15 +616,15 @@ export default function LipSyncStudio({
   // ── Generation ──────────────────────────────────────────────────────────
   const handleGenerate = async () => {
     if (!audioUrl) {
-      alert("Please upload an audio file first.");
+      alert("Por favor, faça upload de um arquivo de áudio primeiro.");
       return;
     }
     if (inputMode === "image" && !imageUrl) {
-      alert("Please upload a portrait image first.");
+      alert("Por favor, faça upload de uma imagem retrato primeiro.");
       return;
     }
     if (inputMode === "video" && !videoUrl) {
-      alert("Please upload a source video first.");
+      alert("Por favor, faça upload de um vídeo fonte primeiro.");
       return;
     }
 
@@ -699,17 +699,17 @@ export default function LipSyncStudio({
     inputMode === "image"
       ? imageState === UPLOAD_STATE.READY
         ? `✓ ${imageName}`
-        : "No image"
+        : "Sem imagem"
       : videoState === UPLOAD_STATE.READY
         ? `✓ ${videoName}`
-        : "No video";
+        : "Sem vídeo";
   const mediaStatusClass =
     (inputMode === "image" ? imageState : videoState) === UPLOAD_STATE.READY
       ? "text-primary"
       : "text-muted";
 
   const audioStatusText =
-    audioState === UPLOAD_STATE.READY ? `✓ ${audioName}` : "No audio";
+    audioState === UPLOAD_STATE.READY ? `✓ ${audioName}` : "Sem áudio";
   const audioStatusClass =
     audioState === UPLOAD_STATE.READY ? "text-primary" : "text-muted";
 
@@ -754,7 +754,7 @@ export default function LipSyncStudio({
                 <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     type="button"
-                    title="Fullscreen"
+                    title="Tela cheia"
                     onClick={(e) => {
                       e.stopPropagation();
                       setFullscreenUrl(entry.url);
@@ -770,7 +770,7 @@ export default function LipSyncStudio({
                   </button>
                   <button
                     type="button"
-                    title="Download"
+                    title="Baixar"
                     onClick={(e) => {
                       e.stopPropagation();
                       downloadFile(entry.url, `lipsync-${entry.id || idx}.mp4`);
@@ -798,7 +798,8 @@ export default function LipSyncStudio({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
+          <div className="relative flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true" style={{ background: 'radial-gradient(ellipse 70% 55% at 50% 40%, rgba(255,61,154,0.09) 0%, transparent 70%)', filter: 'blur(60px)' }} />
             <div className="mb-12 relative group">
               <div className="absolute inset-0 bg-primary/10 blur-[120px] rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-1000" />
               <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white/[0.02] rounded-[2rem] flex items-center justify-center border border-white/[0.05] overflow-hidden backdrop-blur-sm">
@@ -813,12 +814,12 @@ export default function LipSyncStudio({
                 <div className="absolute top-4 right-4 text-[10px] text-primary/40 animate-pulse">🎙</div>
               </div>
             </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 text-center px-4">
-              <span className="text-white/40 font-medium">START CREATING WITH</span><br />
-              <span className="text-white">LIP SYNC</span>
+            <h1 className="font-black uppercase tracking-tight mb-6 text-center px-4 text-5xl sm:text-7xl md:text-[clamp(64px,7vw,96px)] bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent">
+              <span className="block text-[11px] font-bold uppercase tracking-[0.2em] text-white/30 mb-3">COMECE A CRIAR COM</span><br />
+              <span className="text-white">ESTÚDIO LIP SYNC</span>
             </h1>
             <p className="text-white/40 text-sm md:text-base font-medium tracking-wide text-center max-w-lg leading-relaxed">
-              Animate portraits or sync lips to audio with AI
+              Anime retratos ou sincronize lábios com áudio usando IA
             </p>
           </div>
         )}
@@ -838,7 +839,7 @@ export default function LipSyncStudio({
                   : "border-white/[0.03] bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white"
               }`}
             >
-              🖼 Portrait Image
+              🖼 Imagem Retrato
             </button>
             <button
               type="button"
@@ -849,7 +850,7 @@ export default function LipSyncStudio({
                   : "border-white/[0.03] bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white"
               }`}
             >
-              🎬 Video
+              🎬 Vídeo
             </button>
           </div>
 
@@ -942,7 +943,7 @@ export default function LipSyncStudio({
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe speech style..."
+                  placeholder="Descreva o estilo de fala..."
                   className="w-full bg-transparent border-none text-white text-sm placeholder:text-white/10 focus:outline-none resize-none pt-1 leading-relaxed min-h-[40px] max-h-[150px] md:max-h-[250px] overflow-y-auto custom-scrollbar disabled:opacity-40"
                   rows={1}
                 />
@@ -966,13 +967,13 @@ export default function LipSyncStudio({
                   }}
                   className="flex items-center gap-2 px-2 py-1.5 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
                 >
-                  <div className="w-3.5 h-3.5 bg-[#d9ff00] rounded-sm flex items-center justify-center">
+                  <div className="w-3.5 h-3.5 bg-[#FF4500] rounded-sm flex items-center justify-center">
                     <span className="text-[9px] font-black text-black">
                       S
                     </span>
                   </div>
-                  <span className="text-xs font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
-                    {selectedModel?.name ?? "Select model"}
+                  <span className="text-xs font-semibold text-white/70 group-hover:text-[#FF4500] transition-colors">
+                    {selectedModel?.name ?? "Selecionar modelo"}
                   </span>
                   <svg
                     width="10"
@@ -1010,7 +1011,7 @@ export default function LipSyncStudio({
                     }}
                     className="flex items-center gap-2 px-2 py-1.5 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
                   >
-                    <span className="text-xs font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
+                    <span className="text-xs font-semibold text-white/70 group-hover:text-[#FF4500] transition-colors">
                       {selectedResolution}
                     </span>
                   </button>
@@ -1031,20 +1032,20 @@ export default function LipSyncStudio({
               type="button"
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="bg-[#d9ff00] text-black px-4 py-2 rounded-md font-medium text-sm hover:bg-[#e5ff33] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-[#d9ff00]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#FF4500] text-black px-4 py-2 rounded-md font-medium text-sm hover:bg-[#e03c00] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-[#FF4500]/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
                 <>
                   <span className="animate-spin inline-block text-black">
                     ◌
                   </span>{" "}
-                  Generating...
+                  Gerando...
                 </>
               ) : generateError ? (
-                `Error: ${generateError}`
+                `Erro: ${generateError}`
               ) : (
                 <>
-                  <span>Sync Lip</span>
+                  <span>Sincronizar Lábios</span>
                 </>
               )}
             </button>

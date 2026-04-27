@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { generateVideo, generateI2V, uploadFile } from "../muapi.js";
 import {
   t2vModels,
@@ -47,7 +47,7 @@ const CheckSvg = () => (
     height="16"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#d9ff00"
+    stroke="#FF4500"
     strokeWidth="4"
   >
     <polyline points="20 6 9 17 4 12" />
@@ -81,7 +81,7 @@ const VideoReadySvg = () => (
   >
     <polygon points="23 7 16 12 23 17 23 7" />
     <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-    <polyline points="7 10 10 13 15 8" stroke="#d9ff00" strokeWidth="2.5" />
+    <polyline points="7 10 10 13 15 8" stroke="#FF4500" strokeWidth="2.5" />
   </svg>
 );
 
@@ -104,7 +104,7 @@ function DropdownItem({ label, selected, onClick }) {
 function ModelDropdown({ imageMode, selectedModel, onSelect, onClose }) {
   const [search, setSearch] = useState("");
 
-  const generationModels = imageMode ? i2vModels : t2vModels;
+  const generationModels = imageMode ? i2vModels : allT2vModels;
 
   const lf = search.toLowerCase();
   const filteredMain = generationModels.filter(
@@ -144,7 +144,7 @@ function ModelDropdown({ imageMode, selectedModel, onSelect, onClose }) {
           </span>
           {isV2V && (
             <span className="text-[9px] text-orange-400/70">
-              Upload a video to use
+              Faça upload de um vídeo para usar
             </span>
           )}
         </div>
@@ -171,7 +171,7 @@ function ModelDropdown({ imageMode, selectedModel, onSelect, onClose }) {
           </svg>
           <input
             type="text"
-            placeholder="Search models..."
+            placeholder="Buscar modelos..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onClick={(e) => e.stopPropagation()}
@@ -180,14 +180,14 @@ function ModelDropdown({ imageMode, selectedModel, onSelect, onClose }) {
         </div>
       </div>
       <div className="text-xs font-bold text-secondary px-3 py-2 shrink-0">
-        Video models
+        Modelos de vídeo
       </div>
       <div className="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar pr-1 pb-2">
         {filteredMain.map((m) => renderItem(m, false))}
         {filteredV2V.length > 0 && (
           <>
             <div className="text-xs font-bold text-orange-400/70 px-3 py-2 mt-1 border-t border-white/5">
-              Video Tools
+              Ferramentas de vídeo
             </div>
             {filteredV2V.map((m) => renderItem(m, true))}
           </>
@@ -244,6 +244,21 @@ export default function VideoStudio({
   const [imageMode, setImageMode] = useState(false); // i2v
   const [v2vMode, setV2vMode] = useState(false);
 
+  // ── custom models ──
+  const [customT2vModels, setCustomT2vModels] = useState([]);
+  useEffect(() => {
+    fetch('/api/settings/api-keys')
+      .then((r) => r.ok ? r.json() : { keys: [] })
+      .then(({ keys = [] }) => {
+        const custom = keys
+          .filter((k) => k.isCustom && k.isActive && k.roles?.includes('video_gen') && k.modelIdentifier)
+          .map((k) => ({ id: k.modelIdentifier, name: k.providerName, endpoint: k.modelIdentifier, inputs: { prompt: { type: 'string' } } }));
+        setCustomT2vModels(custom);
+      })
+      .catch(() => {});
+  }, []);
+  const allT2vModels = useMemo(() => [...customT2vModels, ...t2vModels], [customT2vModels]);
+
   // ── model / params ──
   const defaultModel = t2vModels[0];
   const [selectedModel, setSelectedModel] = useState(defaultModel.id);
@@ -297,6 +312,10 @@ export default function VideoStudio({
   // ── dropdown ──
   const [openDropdown, setOpenDropdown] = useState(null); // 'model'|'ar'|'duration'|'resolution'|'quality'|'mode'|null
 
+  // ── sidebar ──
+  const [sidebarTab, setSidebarTab] = useState("Criar Vídeo");
+  const [uploadedImagePreview, setUploadedImagePreview] = useState(null);
+
   // ── prompt ──
   const [prompt, setPrompt] = useState("");
   const [promptDisabled, setPromptDisabled] = useState(false);
@@ -315,8 +334,8 @@ export default function VideoStudio({
 
   const getCurrentModels = useCallback(() => {
     if (v2vMode) return v2vModels;
-    return imageMode ? i2vModels : t2vModels;
-  }, [imageMode, v2vMode]);
+    return imageMode ? i2vModels : allT2vModels;
+  }, [imageMode, v2vMode, allT2vModels]);
 
   const getCurrentAspectRatios = useCallback(
     (id) =>
@@ -357,7 +376,7 @@ export default function VideoStudio({
         return;
       }
 
-      const modelList = isImageMode ? i2vModels : t2vModels;
+      const modelList = isImageMode ? i2vModels : allT2vModels;
       const model = modelList.find((m) => m.id === modelId);
 
       const ars = isImageMode
@@ -506,7 +525,7 @@ export default function VideoStudio({
 
   const processDroppedImage = async (file) => {
     if (file.size > 10 * 1024 * 1024) {
-      alert("Image exceeds 10MB limit.");
+      alert("Imagem excede o limite de 10MB.");
       return;
     }
     setImageUploading(true);
@@ -537,7 +556,7 @@ export default function VideoStudio({
 
   const processDroppedVideo = async (file) => {
     if (file.size > 50 * 1024 * 1024) {
-      alert("Video exceeds 50MB limit.");
+      alert("Vídeo excede o limite de 50MB.");
       return;
     }
     setVideoUploading(true);
@@ -615,7 +634,7 @@ export default function VideoStudio({
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      alert("Image exceeds 10MB limit.");
+      alert("Imagem excede o limite de 10MB.");
       return;
     }
     setImageUploading(true);
@@ -653,7 +672,7 @@ export default function VideoStudio({
   const clearImageUpload = () => {
     setUploadedImageUrl(null);
     setImageMode(false);
-    const first = t2vModels[0];
+    const first = allT2vModels[0];
     setSelectedModel(first.id);
     setSelectedModelName(first.name);
     applyControlsForModel(first.id, false, false);
@@ -665,7 +684,7 @@ export default function VideoStudio({
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
-      alert("Video exceeds 50MB limit.");
+      alert("Vídeo excede o limite de 50MB.");
       return;
     }
     setVideoUploading(true);
@@ -703,7 +722,7 @@ export default function VideoStudio({
     setUploadedVideoUrl(null);
     setUploadedVideoName(null);
     setV2vMode(false);
-    const first = t2vModels[0];
+    const first = allT2vModels[0];
     setSelectedModel(first.id);
     setSelectedModelName(first.name);
     applyControlsForModel(first.id, false, false);
@@ -759,24 +778,24 @@ export default function VideoStudio({
 
     if (v2vMode) {
       if (!uploadedVideoUrl) {
-        alert("Please upload a video first.");
+        alert("Por favor, faça upload de um vídeo primeiro.");
         return;
       }
     } else if (isExtendMode) {
       if (!lastGenerationId) {
         alert(
-          "No Seedance 2.0 generation found to extend. Generate a video first.",
+          "Nenhuma geração do Seedance 2.0 encontrada para estender. Gere um vídeo primeiro.",
         );
         return;
       }
     } else if (imageMode) {
       if (!uploadedImageUrl) {
-        alert("Please upload a start frame image first.");
+        alert("Por favor, faça upload de uma imagem de quadro inicial primeiro.");
         return;
       }
     } else {
       if (!trimmedPrompt) {
-        alert("Please enter a prompt to generate a video.");
+        alert("Por favor, insira um prompt para gerar o vídeo.");
         return;
       }
     }
@@ -795,7 +814,7 @@ export default function VideoStudio({
           model: selectedModel,
           video_url: uploadedVideoUrl,
         });
-        if (!res?.url) throw new Error("No video URL returned by API");
+        if (!res?.url) throw new Error("Nenhuma URL de vídeo retornada pela API");
 
         const genId = res.id || Date.now().toString();
         setLastGenerationId(null);
@@ -828,7 +847,7 @@ export default function VideoStudio({
         if (selectedMode) i2vParams.mode = selectedMode;
 
         res = await generateI2V(apiKey, i2vParams);
-        if (!res?.url) throw new Error("No video URL returned by API");
+        if (!res?.url) throw new Error("Nenhuma URL de vídeo retornada pela API");
 
         const genId = res.id || Date.now().toString();
         if (selectedModel === "seedance-v2.0-i2v") {
@@ -875,7 +894,7 @@ export default function VideoStudio({
         if (selectedMode) params.mode = selectedMode;
 
         res = await generateVideo(apiKey, params);
-        if (!res?.url) throw new Error("No video URL returned by API");
+        if (!res?.url) throw new Error("Nenhuma URL de vídeo retornada pela API");
 
         const genId = res.id || Date.now().toString();
         if (
@@ -910,7 +929,7 @@ export default function VideoStudio({
     } catch (e) {
       hadError = true;
       console.error("[VideoStudio]", e);
-      setGenerateError(e.message?.slice(0, 80) || "Generation failed");
+      setGenerateError(e.message?.slice(0, 80) || "Falha na geração");
       setTimeout(() => setGenerateError(null), 4000);
     } finally {
       setGenerating(false);
@@ -949,7 +968,7 @@ export default function VideoStudio({
     setUploadedVideoUrl(null);
     setUploadedVideoName(null);
     setV2vMode(false);
-    const first = t2vModels[0];
+    const first = allT2vModels[0];
     setSelectedModel(first.id);
     setSelectedModelName(first.name);
     applyControlsForModel(first.id, false, false);
@@ -978,12 +997,12 @@ export default function VideoStudio({
   const isExtendMode = currentModelObj?.requiresRequestId;
 
   const promptPlaceholder = v2vMode
-    ? "Video ready — click Generate to remove watermark"
+    ? "Vídeo pronto — clique em Gerar para remover marca d'água"
     : imageMode
-      ? "Describe the motion or effect (optional)"
+      ? "Descreva o movimento ou efeito (opcional)"
       : isExtendMode
-        ? "Optional: describe how to continue the video..."
-        : "Describe the video you want to create";
+        ? "Opcional: descreva como continuar o vídeo..."
+        : "Descreva o vídeo que deseja criar";
 
   const toggleDropdown = (type) => (e) => {
     e.stopPropagation();
@@ -994,18 +1013,364 @@ export default function VideoStudio({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full flex flex-col items-center justify-center bg-app-bg relative overflow-hidden"
+      className="w-full h-full flex overflow-hidden bg-app-bg relative"
     >
-      {/* ── CENTRAL GALLERY AREA ── */}
-      <div className="flex-1 w-full max-w-7xl mx-auto overflow-y-auto custom-scrollbar pb-40 lg:pb-32 px-2">
+      {/* ── LEFT SIDEBAR ── */}
+      <aside
+        className="hidden md:flex w-[320px] shrink-0 flex-col border-r bg-[#080808] relative z-10"
+        style={{ borderColor: "rgba(255,255,255,0.06)" }}
+      >
+        {/* Tab nav */}
+        <div className="flex shrink-0 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          {["Criar Vídeo", "Editar Vídeo"].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setSidebarTab(tab)}
+              className="flex-1 py-3 transition-all"
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: sidebarTab === tab ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.25)",
+                borderBottom: sidebarTab === tab ? "2px solid #FF4500" : "2px solid transparent",
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Scrollable sidebar content */}
+        <div className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto custom-scrollbar">
+
+          {/* Start Frame */}
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
+              Quadro Inicial
+            </p>
+            <input ref={imageFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
+            <div
+              className="relative w-full rounded-xl overflow-hidden cursor-pointer group transition-all"
+              style={{
+                aspectRatio: "16/9",
+                border: uploadedImageUrl ? "2px solid rgba(255,69,0,0.4)" : "2px dashed rgba(255,255,255,0.08)",
+                background: uploadedImageUrl ? "transparent" : "rgba(255,255,255,0.015)",
+              }}
+              onClick={() => uploadedImageUrl ? clearImageUpload() : imageFileInputRef.current?.click()}
+            >
+              {imageUploading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-10">
+                  <svg className="w-10 h-10 -rotate-90">
+                    <circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,0.1)" strokeWidth="2" fill="transparent" />
+                    <circle cx="20" cy="20" r="18" stroke="#FF4500" strokeWidth="2" fill="transparent"
+                      strokeDasharray={113} strokeDashoffset={113 - (113 * imageProgress) / 100}
+                      className="transition-all duration-300" />
+                  </svg>
+                  <span style={{ fontSize: 11, fontWeight: 900, color: "#FF4500", marginTop: 4 }}>{imageProgress}%</span>
+                </div>
+              )}
+              {uploadedImageUrl ? (
+                <>
+                  <img src={uploadedImageUrl} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "rgba(0,0,0,0.55)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>Remover imagem</span>
+                  </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 transition-colors"
+                  style={{ color: "rgba(255,255,255,0.2)" }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <span style={{ fontSize: 11, fontWeight: 600 }}>Adicionar imagem</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* End Frame (disabled / coming soon) */}
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.18)", marginBottom: 8 }}>
+              Quadro Final <span style={{ textTransform: "none", fontWeight: 400, color: "rgba(255,255,255,0.12)" }}>— opcional</span>
+            </p>
+            <div className="relative w-full rounded-xl flex items-center justify-center opacity-30 cursor-not-allowed"
+              style={{ aspectRatio: "16/9", border: "2px dashed rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.01)" }}>
+              <div className="flex flex-col items-center gap-1.5" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                <span style={{ fontSize: 10, fontWeight: 600 }}>Em breve</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Prompt */}
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
+              Prompt
+            </p>
+            <div className="rounded-xl p-3 transition-all"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <textarea
+                ref={textareaRef}
+                value={prompt}
+                onChange={handlePromptInput}
+                placeholder={promptPlaceholder}
+                disabled={promptDisabled}
+                rows={4}
+                className="w-full bg-transparent border-none text-white text-sm focus:outline-none resize-none leading-relaxed disabled:opacity-40"
+                style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}
+              />
+            </div>
+          </div>
+
+          {/* Video input (V2V) */}
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
+              Entrada de Vídeo <span style={{ textTransform: "none", fontWeight: 400, color: "rgba(255,255,255,0.15)" }}>— para edição</span>
+            </p>
+            <input ref={videoFileInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoFileChange} />
+            <div
+              className="relative w-full h-14 rounded-xl flex items-center justify-center cursor-pointer group overflow-hidden transition-all"
+              style={{
+                border: uploadedVideoUrl ? "2px solid rgba(255,69,0,0.35)" : "2px dashed rgba(255,255,255,0.07)",
+                background: uploadedVideoUrl ? "rgba(255,69,0,0.04)" : "rgba(255,255,255,0.01)",
+              }}
+              onClick={() => uploadedVideoUrl ? clearVideoUpload() : videoFileInputRef.current?.click()}
+            >
+              {videoUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10 gap-2">
+                  <svg className="w-8 h-8 -rotate-90">
+                    <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.1)" strokeWidth="2" fill="transparent" />
+                    <circle cx="16" cy="16" r="14" stroke="#FF4500" strokeWidth="2" fill="transparent"
+                      strokeDasharray={88} strokeDashoffset={88 - (88 * videoProgress) / 100}
+                      className="transition-all duration-300" />
+                  </svg>
+                  <span style={{ fontSize: 11, fontWeight: 900, color: "#FF4500" }}>{videoProgress}%</span>
+                </div>
+              )}
+              {uploadedVideoUrl ? (
+                <>
+                  <video src={uploadedVideoUrl} className="absolute inset-0 w-full h-full object-cover opacity-30" muted />
+                  <div className="relative flex items-center gap-2" style={{ color: "rgba(255,69,0,0.85)" }}>
+                    <VideoReadySvg />
+                    <span style={{ fontSize: 11, fontWeight: 600 }} className="truncate max-w-[140px]">{uploadedVideoName || "Vídeo pronto"}</span>
+                    <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginLeft: 4 }}>— limpar</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 transition-colors group-hover:opacity-70"
+                  style={{ color: "rgba(255,255,255,0.25)" }}>
+                  <VideoIconSvg className="" />
+                  <span style={{ fontSize: 11, fontWeight: 600 }}>Upload de vídeo</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Model selector */}
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
+              Modelo
+            </p>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={toggleDropdown("model")}
+                className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl transition-all group"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "#FF4500", boxShadow: "0 0 12px rgba(255,69,0,0.3)" }}>
+                    <span style={{ fontSize: 9, fontWeight: 900, color: "black" }}>V</span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{selectedModelName}</span>
+                </div>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.3 }}>
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              {openDropdown === "model" && (
+                <div
+                  ref={dropdownRef}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-[calc(100%+8px)] left-0 z-50 rounded-[1.5rem] p-3 shadow-2xl w-full"
+                  style={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.06)", maxHeight: 320, overflowY: "auto" }}
+                >
+                  <ModelDropdown
+                    imageMode={imageMode}
+                    selectedModel={selectedModel}
+                    onSelect={handleModelSelect}
+                    onClose={() => setOpenDropdown(null)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AR / Duration / Resolution grid */}
+          {(showAr || showDuration || showResolution) && (
+            <div className="grid grid-cols-2 gap-2">
+              {showAr && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={toggleDropdown("ar")}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all group"
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Proporção</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>{selectedAr}</span>
+                    </div>
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.2 }}><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  {openDropdown === "ar" && (
+                    <div ref={dropdownRef} onClick={(e) => e.stopPropagation()}
+                      className="absolute top-[calc(100%+8px)] left-0 z-50 rounded-xl p-3 shadow-2xl min-w-[140px] max-h-60 overflow-y-auto custom-scrollbar"
+                      style={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.2)", borderBottom: "1px solid rgba(255,255,255,0.04)", paddingBottom: 6, marginBottom: 6 }}>Proporção</div>
+                      {getCurrentAspectRatios(selectedModel).map((r) => (
+                        <div key={r} className="flex items-center justify-between p-2.5 hover:bg-white/5 rounded-lg cursor-pointer transition-all"
+                          onClick={(e) => { e.stopPropagation(); setSelectedAr(r); setOpenDropdown(null); }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{r}</span>
+                          {selectedAr === r && <CheckSvg />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {showDuration && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={toggleDropdown("duration")}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all"
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Duração</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>{selectedDuration}s</span>
+                    </div>
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.2 }}><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  {openDropdown === "duration" && (
+                    <div ref={dropdownRef} onClick={(e) => e.stopPropagation()}
+                      className="absolute top-[calc(100%+8px)] left-0 z-50 rounded-xl p-3 shadow-2xl min-w-[130px]"
+                      style={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.2)", borderBottom: "1px solid rgba(255,255,255,0.04)", paddingBottom: 6, marginBottom: 6 }}>Duração</div>
+                      {getCurrentDurations(selectedModel).map((d) => (
+                        <div key={d} className="flex items-center justify-between p-2.5 hover:bg-white/5 rounded-lg cursor-pointer transition-all"
+                          onClick={(e) => { e.stopPropagation(); setSelectedDuration(d); setOpenDropdown(null); }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{d}s</span>
+                          {selectedDuration === d && <CheckSvg />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {showResolution && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={toggleDropdown("resolution")}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all"
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resolução</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>{selectedResolution || "720p"}</span>
+                    </div>
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.2 }}><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  {openDropdown === "resolution" && (
+                    <div ref={dropdownRef} onClick={(e) => e.stopPropagation()}
+                      className="absolute top-[calc(100%+8px)] left-0 z-50 rounded-xl p-3 shadow-2xl min-w-[140px]"
+                      style={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.2)", borderBottom: "1px solid rgba(255,255,255,0.04)", paddingBottom: 6, marginBottom: 6 }}>Resolução</div>
+                      {getCurrentResolutions(selectedModel).map((r) => (
+                        <div key={r} className="flex items-center justify-between p-2.5 hover:bg-white/5 rounded-lg cursor-pointer transition-all"
+                          onClick={(e) => { e.stopPropagation(); setSelectedResolution(r); setOpenDropdown(null); }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{r}</span>
+                          {selectedResolution === r && <CheckSvg />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Extend banner */}
+          {isExtendMode && (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+              style={{ background: "rgba(255,69,0,0.05)", border: "1px solid rgba(255,69,0,0.12)", fontSize: 10, color: "rgba(255,69,0,0.8)", fontWeight: 500 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+              Estendendo geração anterior do Seedance 2.0
+            </div>
+          )}
+        </div>
+
+        {/* Generate button — pinned to sidebar bottom */}
+        <div className="p-4 shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {generateError && (
+            <p className="text-center mb-2" style={{ fontSize: 11, color: "rgba(220,38,38,0.85)" }}>{generateError}</p>
+          )}
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={generating}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+            style={{
+              background: generating ? "rgba(255,69,0,0.7)" : "#FF4500",
+              boxShadow: "0 4px 24px rgba(255,69,0,0.25)",
+              fontSize: 13,
+              fontWeight: 900,
+              color: "black",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+            }}
+          >
+            {generating ? (
+              <>
+                <span className="animate-spin">◌</span>
+                Gerando...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Gerar
+              </>
+            )}
+          </button>
+        </div>
+      </aside>
+
+      {/* ── MAIN CANVAS ── */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar relative">
         {history.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full pt-4 animate-fade-in-up">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6 animate-fade-in-up">
             {history.map((entry, idx) => {
               const isSeedance2 = entry.model === "seedance-v2.0-t2v" || entry.model === "seedance-v2.0-i2v";
               return (
                 <div
                   key={entry.id || idx}
-                  className="relative group rounded-lg overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col"
+                  className="relative group rounded-xl overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col"
                 >
                   <video
                     src={entry.url}
@@ -1016,77 +1381,58 @@ export default function VideoStudio({
                     muted
                     playsInline
                     onMouseOver={(e) => e.target.play()}
-                    onMouseOut={(e) => {
-                      e.target.pause();
-                      e.target.currentTime = 0;
-                    }}
+                    onMouseOut={(e) => { e.target.pause(); e.target.currentTime = 0; }}
                   />
-                  
-                  {/* Overlay actions */}
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      title="Fullscreen"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFullscreenUrl(entry.url);
-                      }}
-                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
-                    >
+                    <button type="button" title="Tela cheia"
+                      onClick={(e) => { e.stopPropagation(); setFullscreenUrl(entry.url); }}
+                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <polyline points="15 3 21 3 21 9" />
-                        <polyline points="9 21 3 21 3 15" />
-                        <line x1="21" y1="3" x2="14" y2="10" />
-                        <line x1="3" y1="21" x2="10" y2="14" />
+                        <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
+                        <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
                       </svg>
                     </button>
-                    <button
-                      type="button"
-                      title="Download"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        downloadFile(entry.url, `video-${entry.id || idx}.mp4`);
-                      }}
-                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
-                    >
+                    <button type="button" title="Baixar"
+                      onClick={(e) => { e.stopPropagation(); downloadFile(entry.url, `video-${entry.id || idx}.mp4`); }}
+                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
                       </svg>
                     </button>
+                    <button type="button" title="Enviar para Editor"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const clip = { url: entry.url, duration: entry.duration || 5, label: entry.prompt?.slice(0, 40) || "Generated clip" };
+                        const pending = JSON.parse(localStorage.getItem("video_editor_pending_clips") || "[]");
+                        localStorage.setItem("video_editor_pending_clips", JSON.stringify([...pending, clip]));
+                        window.dispatchEvent(new CustomEvent("add-to-editor", { detail: clip }));
+                      }}
+                      className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                    </button>
                     {isSeedance2 && (
-                      <button
-                        type="button"
-                        title="Extend this video using Seedance 2.0 Extend"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLastGenerationId(entry.id);
-                          handleExtend();
-                        }}
-                        className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10"
-                      >
+                      <button type="button" title="Extend with Seedance 2.0 Extend"
+                        onClick={(e) => { e.stopPropagation(); setLastGenerationId(entry.id); handleExtend(); }}
+                        className="p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-primary hover:text-black transition-all border border-white/10">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                       </button>
                     )}
                   </div>
-
-                  {/* Prompt & Details */}
                   <div className="p-3 bg-black/80 backdrop-blur-sm border-t border-white/5 flex-1 flex flex-col justify-between gap-2">
                     <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
-                      {entry.prompt || "No prompt provided"}
+                      {entry.prompt || "Sem prompt"}
                     </p>
                     <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                       <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap">
                         {entry.model?.replace("-", " ")}
                       </span>
                       <div className="flex gap-2">
-                        {entry.resolution && (
-                          <span className="text-[10px] text-white/40">{entry.resolution}</span>
-                        )}
-                        {entry.duration && (
-                          <span className="text-[10px] text-white/40">{entry.duration}s</span>
-                        )}
+                        {entry.resolution && <span className="text-[10px] text-white/40">{entry.resolution}</span>}
+                        {entry.duration && <span className="text-[10px] text-white/40">{entry.duration}s</span>}
                       </div>
                     </div>
                   </div>
@@ -1095,487 +1441,151 @@ export default function VideoStudio({
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full animate-fade-in-up transition-all duration-700 min-h-[50vh]">
-            <div className="mb-12 relative group">
-              <div className="absolute inset-0 bg-primary/10 blur-[120px] rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-1000" />
-              <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white/[0.02] rounded-[2rem] flex items-center justify-center border border-white/[0.05] overflow-hidden backdrop-blur-sm">
-                <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10 relative z-10 transition-transform duration-500 group-hover:scale-110">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary opacity-80">
-                    <polygon points="23 7 16 12 23 17 23 7" />
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+          /* ── Empty hero ── */
+          <div className="relative flex flex-col items-center justify-center min-h-full px-8 py-16 animate-fade-in-up">
+            {/* Atmospheric glow */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: "radial-gradient(ellipse 80% 60% at 50% 35%, rgba(255,69,0,0.07) 0%, transparent 65%)",
+              filter: "blur(40px)",
+            }} />
+            {/* Corner guides */}
+            <div className="absolute hidden lg:block" style={{ top: "8%", left: "5%", width: 20, height: 20, borderTop: "1.5px solid rgba(255,255,255,0.1)", borderLeft: "1.5px solid rgba(255,255,255,0.1)" }} />
+            <div className="absolute hidden lg:block" style={{ top: "8%", right: "5%", width: 20, height: 20, borderTop: "1.5px solid rgba(255,255,255,0.1)", borderRight: "1.5px solid rgba(255,255,255,0.1)" }} />
+            <div className="absolute hidden lg:block" style={{ bottom: "8%", left: "5%", width: 20, height: 20, borderBottom: "1.5px solid rgba(255,255,255,0.1)", borderLeft: "1.5px solid rgba(255,255,255,0.1)" }} />
+            <div className="absolute hidden lg:block" style={{ bottom: "8%", right: "5%", width: 20, height: 20, borderBottom: "1.5px solid rgba(255,255,255,0.1)", borderRight: "1.5px solid rgba(255,255,255,0.1)" }} />
+
+            {/* Headline */}
+            <div className="relative z-10 text-center mb-14">
+              <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.25em", color: "rgba(255,255,255,0.2)", marginBottom: 20 }}>
+                COMECE A CRIAR COM
+              </p>
+              <h1
+                className="font-black uppercase text-center bg-gradient-to-b from-white via-white/90 to-white/30 bg-clip-text text-transparent"
+                style={{ fontSize: "clamp(36px, 5.5vw, 72px)", letterSpacing: "-0.02em", lineHeight: 0.92 }}
+              >
+                CRIE VÍDEOS<br />COM UM CLIQUE
+              </h1>
+            </div>
+
+            {/* 3 action cards */}
+            <div className="relative z-10 flex flex-col sm:flex-row gap-4 w-full max-w-xl">
+              {/* Add Image */}
+              <button
+                type="button"
+                onClick={() => imageFileInputRef.current?.click()}
+                className="flex-1 flex flex-col items-start gap-3 p-5 rounded-2xl text-left transition-all group"
+                style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,69,0,0.04)"; e.currentTarget.style.borderColor = "rgba(255,69,0,0.25)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,69,0,0.1)", border: "1px solid rgba(255,69,0,0.2)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4500" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
                   </svg>
                 </div>
-                <div className="absolute top-4 right-4 text-[10px] text-primary/40 animate-pulse">✨</div>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)" }}>Adicionar Imagem</p>
+                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3, lineHeight: 1.5 }}>Quadro inicial para Imagem-para-Vídeo</p>
+                </div>
+              </button>
+
+              {/* Choose Preset */}
+              <div
+                className="flex-1 flex flex-col items-start gap-3 p-5 rounded-2xl opacity-40 cursor-not-allowed"
+                style={{ background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                  </svg>
+                </div>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.5)" }}>Escolher Preset</p>
+                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 3, lineHeight: 1.5 }}>Presets de estilo — em breve</p>
+                </div>
               </div>
+
+              {/* Get Video */}
+              <button
+                type="button"
+                onClick={() => textareaRef.current?.focus()}
+                className="flex-1 flex flex-col items-start gap-3 p-5 rounded-2xl text-left transition-all"
+                style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                  </svg>
+                </div>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)" }}>Gerar Vídeo</p>
+                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3, lineHeight: 1.5 }}>Digite um prompt e gere</p>
+                </div>
+              </button>
             </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4 text-center px-4">
-              <span className="text-white/40 font-medium">START CREATING WITH</span><br />
-              <span className="text-white">VIDEO STUDIO</span>
-            </h1>
-            <p className="text-white/40 text-sm md:text-base font-medium tracking-wide text-center max-w-lg leading-relaxed">
-              Animate images into stunning AI videos with motion effects
-            </p>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* ── BOTTOM PROMPT BAR ── */}
-      <div className="absolute bottom-4 w-full max-w-[95%] lg:max-w-4xl z-40 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-        <div className="w-full bg-[#0a0a0a]/80 backdrop-blur-3xl rounded-md border border-white/10 p-4 flex flex-col gap-2 shadow-2xl">
-          <div className="flex items-center gap-2 px-1">
-            {/* Image upload button */}
-            <div className="relative">
-              <input
-                ref={imageFileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageFileChange}
-              />
-              <button
-                type="button"
-                title={
-                  uploadedImageUrl
-                    ? "Clear image"
-                    : "Upload image for Image-to-Video"
-                }
-                onClick={() =>
-                  uploadedImageUrl
-                    ? clearImageUpload()
-                    : imageFileInputRef.current?.click()
-                }
-                className={`w-10 h-10 shrink-0 rounded-full border transition-all flex items-center justify-center relative overflow-hidden ${uploadedImageUrl ? "border-primary/60 bg-primary/5" : "bg-white/5 border-white/[0.03] hover:bg-white/10 hover:border-primary/40"} group`}
-              >
-                {imageUploading ? (
-                  <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-black/80 z-20 backdrop-blur-[2px]">
-                    <svg className="w-8 h-8 -rotate-90">
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="transparent"
-                        className="text-white/10"
-                      />
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="transparent"
-                        strokeDasharray={88}
-                        strokeDashoffset={88 - (88 * imageProgress) / 100}
-                        className="text-primary transition-all duration-300"
-                      />
-                    </svg>
-                    <span className="absolute text-[9px] font-black text-primary leading-none">
-                      {imageProgress}%
-                    </span>
-                  </div>
-                ) : null}
-
-                {uploadedImageUrl ? (
-                  <img
-                    src={uploadedImageUrl}
-                    alt=""
-                    className={`w-full h-full object-cover rounded-full ${imageUploading ? "opacity-40 blur-[2px]" : "opacity-100"}`}
-                  />
-                ) : (
-                  !imageUploading && (
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="text-white/40 group-hover:text-primary transition-colors"
-                    >
-                      <rect
-                        x="3"
-                        y="3"
-                        width="18"
-                        height="18"
-                        rx="2"
-                        ry="2"
-                      />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                  )
-                )}
-              </button>
-            </div>
-
-            {/* Video upload button */}
-            <div className="relative">
-              <input
-                ref={videoFileInputRef}
-                type="file"
-                accept="video/*"
-                className="hidden"
-                onChange={handleVideoFileChange}
-              />
-              <button
-                type="button"
-                title={
-                  uploadedVideoUrl
-                    ? `${uploadedVideoName} — click to clear`
-                    : "Upload video to remove watermark"
-                }
-                onClick={() =>
-                  uploadedVideoUrl
-                    ? clearVideoUpload()
-                    : videoFileInputRef.current?.click()
-                }
-                className={`w-10 h-10 shrink-0 rounded-full border transition-all flex items-center justify-center relative overflow-hidden ${uploadedVideoUrl ? "border-primary/60 bg-white/5" : "bg-white/[0.03] border-white/[0.03] hover:bg-white/10 hover:border-primary/40"} group`}
-              >
-                {videoUploading ? (
-                  <div className="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-black/80 z-20 backdrop-blur-[2px]">
-                    <svg className="w-8 h-8 -rotate-90">
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="transparent"
-                        className="text-white/10"
-                      />
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="transparent"
-                        strokeDasharray={88}
-                        strokeDashoffset={88 - (88 * videoProgress) / 100}
-                        className="text-primary transition-all duration-300"
-                      />
-                    </svg>
-                    <span className="absolute text-[9px] font-black text-primary leading-none">
-                      {videoProgress}%
-                    </span>
-                  </div>
-                ) : uploadedVideoUrl ? (
-                  <video
-                    src={uploadedVideoUrl}
-                    className={`w-full h-full object-cover rounded-full ${videoUploading ? "opacity-40 blur-[2px]" : "opacity-100"}`}
-                    muted
-                  />
-                ) : (
-                  <VideoIconSvg className="text-white/40 group-hover:text-primary transition-colors" />
-                )}
-              </button>
-            </div>
-
-            {/* Prompt textarea */}
-            <div className="flex-1 flex flex-col gap-1">
-              <textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={handlePromptInput}
-                placeholder={promptPlaceholder}
-                disabled={promptDisabled}
-                rows={1}
-                className="w-full bg-transparent border-none text-white text-sm placeholder:text-white/10 focus:outline-none resize-none pt-1 leading-relaxed min-h-[40px] max-h-[150px] md:max-h-[250px] overflow-y-auto custom-scrollbar disabled:opacity-40"
-              />
-            </div>
+      {/* ── MOBILE: compact bottom bar (shown only on small screens) ── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3"
+        style={{ background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="flex items-center gap-2">
+          <input ref={imageFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
+          <button type="button"
+            onClick={() => uploadedImageUrl ? clearImageUpload() : imageFileInputRef.current?.click()}
+            className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center overflow-hidden relative transition-all"
+            style={{ border: uploadedImageUrl ? "1.5px solid rgba(255,69,0,0.5)" : "1.5px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)" }}>
+            {uploadedImageUrl
+              ? <img src={uploadedImageUrl} alt="" className="w-full h-full object-cover rounded-full" />
+              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                </svg>
+            }
+          </button>
+          <input ref={videoFileInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoFileChange} />
+          <div className="flex-1">
+            <textarea
+              ref={textareaRef}
+              value={prompt}
+              onChange={handlePromptInput}
+              placeholder={promptPlaceholder}
+              disabled={promptDisabled}
+              rows={1}
+              className="w-full bg-transparent border-none text-white text-sm focus:outline-none resize-none leading-relaxed disabled:opacity-40"
+              style={{ minHeight: 38, maxHeight: 120, color: "rgba(255,255,255,0.85)", fontSize: 13 }}
+            />
           </div>
-
-          {/* Extend banner */}
-          {isExtendMode && (
-            <div className="flex items-center gap-2 px-3 py-1.5 mx-3 bg-primary/5 border border-primary/10 rounded-lg text-[10px] text-primary/80 font-medium tracking-tight">
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-              <span>Extending previous Seedance 2.0 generation</span>
-            </div>
-          )}
-
-          {/* Bottom row: controls + generate */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2 border-t border-white/[0.03] relative">
-            <div className="flex items-center gap-2 relative flex-wrap pb-1 md:pb-0">
-              {/* Model btn */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={toggleDropdown("model")}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
-                >
-                  <div className="w-4 h-4 bg-[#d9ff00] rounded flex items-center justify-center shadow-lg shadow-[#d9ff00]/10">
-                    <span className="text-[9px] font-bold text-black uppercase">
-                      V
-                    </span>
-                  </div>
-                  <span className="text-xs font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
-                    {selectedModelName}
-                  </span>
-                  <svg
-                    width="8"
-                    height="8"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    className="opacity-20 group-hover:opacity-100 transition-opacity"
-                  >
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-                {openDropdown === "model" && (
-                  <div
-                    ref={dropdownRef}
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute bottom-[calc(100%+12px)] left-0 z-50 bg-[#0a0a0a] rounded-[1.5rem] p-3 shadow-2xl border border-white/[0.05] w-[calc(100vw-3rem)] max-w-xs"
-                  >
-                    <ModelDropdown
-                      imageMode={imageMode}
-                      selectedModel={selectedModel}
-                      onSelect={handleModelSelect}
-                      onClose={() => setOpenDropdown(null)}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Aspect ratio btn */}
-              {showAr && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={toggleDropdown("ar")}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="opacity-40 text-white"
-                    >
-                      <rect
-                        x="3"
-                        y="3"
-                        width="18"
-                        height="18"
-                        rx="2"
-                        ry="2"
-                      />
-                    </svg>
-                    <span className="text-[11px] font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
-                      {selectedAr}
-                    </span>
-                  </button>
-                  {openDropdown === "ar" && (
-                    <div
-                      ref={dropdownRef}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-[calc(100%+12px)] left-0 z-50 bg-[#0a0a0a] rounded-lg p-3 shadow-2xl border border-white/[0.05] max-h-80 overflow-y-auto custom-scrollbar min-w-[160px]"
-                    >
-                      <div className="text-xs font-bold text-white/20 border-b border-white/[0.03] mb-2">
-                        Aspect Ratio
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {getCurrentAspectRatios(selectedModel).map((r) => (
-                          <div
-                            key={r}
-                            className="flex items-center justify-between p-3 hover:bg-white/5 rounded cursor-pointer transition-all group/opt"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedAr(r);
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            <span className="text-[11px] font-semibold text-white/70 group-hover/opt:text-white transition-opacity">
-                              {r}
-                            </span>
-                            {selectedAr === r && <CheckSvg />}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Duration btn */}
-              {showDuration && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={toggleDropdown("duration")}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="opacity-40 text-white"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span className="text-xs font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
-                      {selectedDuration}s
-                    </span>
-                  </button>
-                  {openDropdown === "duration" && (
-                    <div
-                      ref={dropdownRef}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-[calc(100%+12px)] left-0 z-50 bg-[#0a0a0a] rounded-md p-3 shadow-2xl border border-white/10 min-w-[140px]"
-                    >
-                      <div className="text-xs font-bold text-white/20 border-b border-white/[0.03] mb-2">
-                        Duration
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {getCurrentDurations(selectedModel).map((d) => (
-                          <div
-                            key={d}
-                            className="flex items-center justify-between p-2 hover:bg-white/5 rounded-md cursor-pointer transition-all group/opt"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedDuration(d);
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            <span className="text-xs font-semibold text-white/70 group-hover/opt:text-white">
-                              {d}s
-                            </span>
-                            {selectedDuration === d && <CheckSvg />}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Resolution btn */}
-              {showResolution && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={toggleDropdown("resolution")}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] rounded-md transition-all border border-white/[0.03] group whitespace-nowrap"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="opacity-40 text-white"
-                    >
-                      <path d="M6 2L3 6v15a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" />
-                    </svg>
-                    <span className="text-[11px] font-semibold text-white/70 group-hover:text-[#d9ff00] transition-colors">
-                      {selectedResolution || "720p"}
-                    </span>
-                  </button>
-                  {openDropdown === "resolution" && (
-                    <div
-                      ref={dropdownRef}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-[calc(100%+12px)] left-0 z-50 bg-[#0a0a0a] rounded-md p-3 shadow-2xl border border-white/[0.05] min-w-[140px]"
-                    >
-                      <div className="text-xs font-bold text-white/20 border-b border-white/[0.03] mb-2">
-                        Resolution
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {getCurrentResolutions(selectedModel).map((r) => (
-                          <div
-                            key={r}
-                            className="flex items-center justify-between p-3 hover:bg-white/5 rounded cursor-pointer transition-all group/opt"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedResolution(r);
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            <span className="text-[11px] font-semibold text-white/70 group-hover/opt:text-white">
-                              {r}
-                            </span>
-                            {selectedResolution === r && <CheckSvg />}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Generate button */}
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={generating}
-              className="bg-[#d9ff00] text-black px-4 py-2 rounded-md font-medium text-sm hover:bg-[#e5ff33] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-[#d9ff00]/10 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {generating ? (
-                <>
-                  <span className="animate-spin inline-block text-black">
-                    ◌
-                  </span>{" "}
-                  Generating...
-                </>
-              ) : generateError ? (
-                `Error: ${generateError}`
-              ) : (
-                <>
-                  <span>Generate</span>
-                </>
-              )}
-            </button>
-          </div>
+          <button type="button" onClick={handleGenerate} disabled={generating}
+            className="shrink-0 px-4 py-2.5 rounded-xl transition-all disabled:opacity-50 flex items-center gap-1.5"
+            style={{ background: "#FF4500", color: "black", fontSize: 12, fontWeight: 900 }}>
+            {generating ? <span className="animate-spin">◌</span> : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3" /></svg>}
+            {generating ? "" : "Gerar"}
+          </button>
         </div>
       </div>
 
       {/* ── FULLSCREEN VIDEO MODAL ── */}
       {fullscreenUrl && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
           onClick={() => setFullscreenUrl(null)}
         >
-          <button
-            type="button"
+          <button type="button"
             className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors border border-white/10"
-            onClick={(e) => {
-              e.stopPropagation();
-              setFullscreenUrl(null);
-            }}
-          >
+            onClick={(e) => { e.stopPropagation(); setFullscreenUrl(null); }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-          <video 
-            src={fullscreenUrl} 
-            controls 
-            autoPlay 
-            loop 
-            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up" 
-            onClick={(e) => e.stopPropagation()}
-          />
+          <video src={fullscreenUrl} controls autoPlay loop
+            className="max-w-[95vw] max-h-[95vh] rounded-2xl shadow-2xl object-contain animate-scale-up"
+            onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>

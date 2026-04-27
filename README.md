@@ -2,6 +2,29 @@
 
 > **The free, open-source, unrestricted alternative to Higgsfield AI, Freepik, Krea, Openart AI.** Generate AI images and videos using 200+ state-of-the-art models — no content filters, no closed ecosystem, no subscription fees.
 
+## Supabase API key vault
+
+This MVP can reuse the Supabase project from the older CreativeOS prototype to store user provider keys encrypted in Postgres.
+
+Apply `supabase/migrations/20260425190000_user_api_keys.sql` to the Supabase project, then configure:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+The migration expects these encryption settings to be available to Postgres:
+
+```bash
+APP_ENCRYPTION_KEY=$(openssl rand -hex 32)
+APP_ENCRYPTION_NONCE=$(openssl rand -hex 24)
+```
+
+Store them in Supabase Dashboard > Settings > Vault. The SQL functions read `app.encryption_key` and `app.encryption_nonce` through `current_setting(...)`; if your Supabase project does not mirror Vault secrets into database settings automatically, create equivalent database settings before saving real keys.
+
+Raw API keys are never returned by client-facing routes. Runtime agents resolve decrypted keys server-side and fall back to local `.env` values or the existing localStorage headers during development.
+
 > 🐎 **Early access to Happy Horse 1.0** — Alibaba's #1 ranked AI video model. Check out [Awesome HappyHorse 1.0 API & Prompts](https://github.com/Anil-matcha/Awesome-HappyHorse-1.0-API-and-Prompt) — a Python wrapper plus a curated library of high-performing community prompts for native 1080p text-to-video and image-to-video generation with jointly generated audio.
 
 > 💡 **Looking for GPT-Image-2 prompts?** Check out [Awesome GPT-Image-2 API Prompts](https://github.com/Anil-matcha/Awesome-GPT-Image-2-API-Prompts) — a curated collection of 40+ ready-to-use prompts for the OpenAI `gpt-image-2` API covering portraits, posters, UI mockups, game screenshots, and more.

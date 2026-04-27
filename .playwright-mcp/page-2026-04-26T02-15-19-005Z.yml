@@ -1,0 +1,15 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]: Workflow — VBO.AI
+  - generic [ref=e745]:
+    - generic [ref=e746]:
+      - button "Back to All Workflows" [ref=e747] [cursor=pointer]:
+        - img [ref=e748]
+      - generic [ref=e751]:
+        - button "Play" [ref=e752] [cursor=pointer]
+        - button "Builder" [active] [ref=e753] [cursor=pointer]
+      - button "Exit Zen" [ref=e755] [cursor=pointer]:
+        - img [ref=e756]
+        - text: Exit Zen
+    - generic [ref=e776]: Loading Builder...

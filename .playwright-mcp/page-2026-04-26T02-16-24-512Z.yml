@@ -1,0 +1,275 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]: Studio — VBO.AI
+  - generic [ref=e777]:
+    - banner [ref=e778]:
+      - generic [ref=e779]:
+        - img [ref=e781]
+        - generic [ref=e783]: VBO.AI
+      - navigation [ref=e784]:
+        - button "Image Studio" [ref=e785] [cursor=pointer]
+        - button "Video Studio" [ref=e786] [cursor=pointer]
+        - button "✂️ Video Editor" [ref=e787] [cursor=pointer]
+        - button "🤖 Agent Studio" [ref=e788] [cursor=pointer]
+        - button "Lip Sync" [ref=e789] [cursor=pointer]
+        - button "Cinema Studio" [ref=e790] [cursor=pointer]
+        - button "Marketing Studio" [ref=e791] [cursor=pointer]
+        - button "Workflows" [ref=e792] [cursor=pointer]: Workflows
+        - button "Agents" [ref=e794] [cursor=pointer]
+        - button "⚙️ Settings" [ref=e795] [cursor=pointer]
+      - generic [ref=e800]: $---
+    - generic [ref=e804]:
+      - generic [ref=e805]:
+        - generic [ref=e806]:
+          - generic [ref=e807]:
+            - heading "Workflows" [level=1] [ref=e808]
+            - paragraph [ref=e809]: Create and manage your asynchronous AI processing pipelines
+          - button "Create Workflow" [ref=e810] [cursor=pointer]:
+            - img [ref=e811]
+            - text: Create Workflow
+        - generic [ref=e812]:
+          - button "Templates" [ref=e813] [cursor=pointer]
+          - button "My Workflows" [ref=e814] [cursor=pointer]
+          - button "Community" [ref=e815] [cursor=pointer]
+      - generic [ref=e816]:
+        - generic [ref=e817] [cursor=pointer]:
+          - img "AI Personalized Soccer Collectable Card Maker" [ref=e818]
+          - generic [ref=e820]:
+            - generic [ref=e821]: Social Media
+            - heading "AI Personalized Soccer Collectable Card Maker" [level=3] [ref=e822]
+        - generic [ref=e823] [cursor=pointer]:
+          - img "High-Quality 3D Logo Animation" [ref=e824]
+          - generic [ref=e826]:
+            - generic [ref=e827]: Featured
+            - heading "High-Quality 3D Logo Animation" [level=3] [ref=e828]
+        - generic [ref=e829] [cursor=pointer]:
+          - img "Selfie with Celebrities" [ref=e830]
+          - generic [ref=e832]:
+            - generic [ref=e833]: Social Media
+            - heading "Selfie with Celebrities" [level=3] [ref=e834]
+        - generic [ref=e835] [cursor=pointer]:
+          - img "Viral Talking Baby AI Video Maker" [ref=e836]
+          - generic [ref=e838]:
+            - generic [ref=e839]: Social Media
+            - heading "Viral Talking Baby AI Video Maker" [level=3] [ref=e840]
+        - generic [ref=e841] [cursor=pointer]:
+          - img "AI Product 360° Video - river" [ref=e842]
+          - generic [ref=e844]:
+            - generic [ref=e845]: E-Commerce
+            - heading "AI Product 360° Video - river" [level=3] [ref=e846]
+        - generic [ref=e847] [cursor=pointer]:
+          - img "UGC Ads workflow" [ref=e848]
+          - generic [ref=e850]:
+            - generic [ref=e851]: E-Commerce
+            - heading "UGC Ads workflow" [level=3] [ref=e852]
+        - generic [ref=e853] [cursor=pointer]:
+          - img "Fashion Video Generator" [ref=e854]
+          - generic [ref=e856]:
+            - generic [ref=e857]: Fashion
+            - heading "Fashion Video Generator" [level=3] [ref=e858]
+        - generic [ref=e859] [cursor=pointer]:
+          - img "Professional Fashion Headshots" [ref=e860]
+          - generic [ref=e862]:
+            - generic [ref=e863]: Fashion
+            - heading "Professional Fashion Headshots" [level=3] [ref=e864]
+        - generic [ref=e865] [cursor=pointer]:
+          - img "AI Real Estate Photographer" [ref=e866]
+          - generic [ref=e868]:
+            - generic [ref=e869]: Home Decor
+            - heading "AI Real Estate Photographer" [level=3] [ref=e870]
+        - generic [ref=e871] [cursor=pointer]:
+          - img "Furniture campaign Generator" [ref=e872]
+          - generic [ref=e874]:
+            - generic [ref=e875]: Home Decor
+            - heading "Furniture campaign Generator" [level=3] [ref=e876]
+        - generic [ref=e877] [cursor=pointer]:
+          - img "Virtual Try On" [ref=e878]
+          - generic [ref=e880]:
+            - generic [ref=e881]: Fashion
+            - heading "Virtual Try On" [level=3] [ref=e882]
+        - generic [ref=e883] [cursor=pointer]:
+          - img "Product redesigner" [ref=e884]
+          - generic [ref=e886]:
+            - generic [ref=e887]: E-Commerce
+            - heading "Product redesigner" [level=3] [ref=e888]
+        - generic [ref=e889] [cursor=pointer]:
+          - img "AI-Driven Product Mockup Creation with Nano Banana Pro" [ref=e890]
+          - generic [ref=e892]:
+            - generic [ref=e893]: Featured
+            - heading "AI-Driven Product Mockup Creation with Nano Banana Pro" [level=3] [ref=e894]
+        - generic [ref=e895] [cursor=pointer]:
+          - img "Kinetic Recall Effect" [ref=e896]
+          - generic [ref=e898]:
+            - generic [ref=e899]: Featured
+            - heading "Kinetic Recall Effect" [level=3] [ref=e900]
+        - generic [ref=e901] [cursor=pointer]:
+          - img "AI Action Figure Generator" [ref=e902]
+          - generic [ref=e904]:
+            - generic [ref=e905]: E-Commerce
+            - heading "AI Action Figure Generator" [level=3] [ref=e906]
+        - generic [ref=e907] [cursor=pointer]:
+          - img "Paper Cutting Art Generation" [ref=e908]
+          - generic [ref=e910]:
+            - generic [ref=e911]: Featured
+            - heading "Paper Cutting Art Generation" [level=3] [ref=e912]
+        - generic [ref=e913] [cursor=pointer]:
+          - img "Cartoon Style Dance Animation Creation" [ref=e914]
+          - generic [ref=e916]:
+            - generic [ref=e917]: Featured
+            - heading "Cartoon Style Dance Animation Creation" [level=3] [ref=e918]
+        - generic [ref=e919] [cursor=pointer]:
+          - img "AI-Driven 3D Floor Plan Rendering" [ref=e920]
+          - generic [ref=e922]:
+            - generic [ref=e923]: Home Decor
+            - heading "AI-Driven 3D Floor Plan Rendering" [level=3] [ref=e924]
+        - generic [ref=e925] [cursor=pointer]:
+          - img "Phoenix" [ref=e926]
+          - generic [ref=e928]:
+            - generic [ref=e929]: Featured
+            - heading "Phoenix" [level=3] [ref=e930]
+        - generic [ref=e931] [cursor=pointer]:
+          - img "AI Interior Makeover" [ref=e932]
+          - generic [ref=e934]:
+            - generic [ref=e935]: Home Decor
+            - heading "AI Interior Makeover" [level=3] [ref=e936]
+        - generic [ref=e937] [cursor=pointer]:
+          - img "Product Photoshoot and Video Generation" [ref=e938]
+          - generic [ref=e940]:
+            - generic [ref=e941]: E-Commerce
+            - heading "Product Photoshoot and Video Generation" [level=3] [ref=e942]
+        - generic [ref=e943] [cursor=pointer]:
+          - img "Logo transformer" [ref=e944]
+          - generic [ref=e946]:
+            - generic [ref=e947]: Featured
+            - heading "Logo transformer" [level=3] [ref=e948]
+        - generic [ref=e949] [cursor=pointer]:
+          - img "AI-Driven Product Advertisement Creation" [ref=e950]
+          - generic [ref=e952]:
+            - generic [ref=e953]: Featured
+            - heading "AI-Driven Product Advertisement Creation" [level=3] [ref=e954]
+        - generic [ref=e955] [cursor=pointer]:
+          - img "AI-Powered Couple Photo Grid Creator" [ref=e956]
+          - generic [ref=e958]:
+            - generic [ref=e959]: Fashion
+            - heading "AI-Powered Couple Photo Grid Creator" [level=3] [ref=e960]
+        - generic [ref=e961] [cursor=pointer]:
+          - img "AI Sculpture Maker" [ref=e962]
+          - generic [ref=e964]:
+            - generic [ref=e965]: Social Media
+            - heading "AI Sculpture Maker" [level=3] [ref=e966]
+        - generic [ref=e967] [cursor=pointer]:
+          - img "Multi-Angle Photo Reshoot" [ref=e968]
+          - generic [ref=e970]:
+            - generic [ref=e971]: Fashion
+            - heading "Multi-Angle Photo Reshoot" [level=3] [ref=e972]
+        - generic [ref=e973] [cursor=pointer]:
+          - img "AI-Driven Product Showcase Video Creation" [ref=e974]
+          - generic [ref=e976]:
+            - generic [ref=e977]: E-Commerce
+            - heading "AI-Driven Product Showcase Video Creation" [level=3] [ref=e978]
+        - generic [ref=e979] [cursor=pointer]:
+          - img "Product Video Ad Maker" [ref=e980]
+          - generic [ref=e982]:
+            - generic [ref=e983]: E-Commerce
+            - heading "Product Video Ad Maker" [level=3] [ref=e984]
+        - generic [ref=e985] [cursor=pointer]:
+          - 'img "AI Wig Try-On: Realistic Face Integration for Mannequin Displays" [ref=e986]'
+          - generic [ref=e988]:
+            - generic [ref=e989]: E-Commerce
+            - 'heading "AI Wig Try-On: Realistic Face Integration for Mannequin Displays" [level=3] [ref=e990]'
+        - generic [ref=e991] [cursor=pointer]:
+          - img "Influencer Content Package Generator" [ref=e992]
+          - generic [ref=e994]:
+            - generic [ref=e995]: E-Commerce
+            - heading "Influencer Content Package Generator" [level=3] [ref=e996]
+        - generic [ref=e997] [cursor=pointer]:
+          - img "AI Room Style Transformation" [ref=e998]
+          - generic [ref=e1000]:
+            - generic [ref=e1001]: Home Decor
+            - heading "AI Room Style Transformation" [level=3] [ref=e1002]
+        - generic [ref=e1003] [cursor=pointer]:
+          - img "Monkey video generator" [ref=e1004]
+          - generic [ref=e1006]:
+            - generic [ref=e1007]: Social Media
+            - heading "Monkey video generator" [level=3] [ref=e1008]
+        - generic [ref=e1009] [cursor=pointer]:
+          - img "Character story Video" [ref=e1010]
+          - generic [ref=e1012]:
+            - generic [ref=e1013]: Social Media
+            - heading "Character story Video" [level=3] [ref=e1014]
+        - generic [ref=e1015] [cursor=pointer]:
+          - img "Virtual Furniture Staging" [ref=e1016]
+          - generic [ref=e1018]:
+            - generic [ref=e1019]: Home Decor
+            - heading "Virtual Furniture Staging" [level=3] [ref=e1020]
+        - generic [ref=e1021] [cursor=pointer]:
+          - img "AI Double Exposure Portrait Maker" [ref=e1022]
+          - generic [ref=e1024]:
+            - generic [ref=e1025]: Social Media
+            - heading "AI Double Exposure Portrait Maker" [level=3] [ref=e1026]
+        - generic [ref=e1027] [cursor=pointer]:
+          - img "Protrait Photography in Streets" [ref=e1028]
+          - generic [ref=e1030]:
+            - generic [ref=e1031]: Fashion
+            - heading "Protrait Photography in Streets" [level=3] [ref=e1032]
+        - generic [ref=e1033] [cursor=pointer]:
+          - img "AI Keyboard Art Image Maker" [ref=e1034]
+          - generic [ref=e1036]:
+            - generic [ref=e1037]: Social Media
+            - heading "AI Keyboard Art Image Maker" [level=3] [ref=e1038]
+        - generic [ref=e1039] [cursor=pointer]:
+          - img "AI-Powered Giant Product Showcase Animation" [ref=e1040]
+          - generic [ref=e1042]:
+            - generic [ref=e1043]: Featured
+            - heading "AI-Powered Giant Product Showcase Animation" [level=3] [ref=e1044]
+        - generic [ref=e1045] [cursor=pointer]:
+          - img "AI Interior Designer home-decor" [ref=e1046]
+          - generic [ref=e1048]:
+            - generic [ref=e1049]: Home Decor
+            - heading "AI Interior Designer home-decor" [level=3] [ref=e1050]
+        - generic [ref=e1051] [cursor=pointer]:
+          - img "Photography Editing" [ref=e1052]
+          - generic [ref=e1054]:
+            - generic [ref=e1055]: Fashion
+            - heading "Photography Editing" [level=3] [ref=e1056]
+        - generic [ref=e1057] [cursor=pointer]:
+          - img "Indie Anime Maker" [ref=e1058]
+          - generic [ref=e1060]:
+            - generic [ref=e1061]: Social Media
+            - heading "Indie Anime Maker" [level=3] [ref=e1062]
+        - generic [ref=e1063] [cursor=pointer]:
+          - img "Giant Product VFX Advertisement Creation" [ref=e1064]
+          - generic [ref=e1066]:
+            - generic [ref=e1067]: Fashion
+            - heading "Giant Product VFX Advertisement Creation" [level=3] [ref=e1068]
+        - generic [ref=e1069] [cursor=pointer]:
+          - img "AI Book Cover Design" [ref=e1070]
+          - generic [ref=e1072]:
+            - generic [ref=e1073]: Featured
+            - heading "AI Book Cover Design" [level=3] [ref=e1074]
+        - generic [ref=e1075] [cursor=pointer]:
+          - img "Jewelry Product Video" [ref=e1076]
+          - generic [ref=e1078]:
+            - generic [ref=e1079]: E-Commerce
+            - heading "Jewelry Product Video" [level=3] [ref=e1080]
+        - generic [ref=e1081] [cursor=pointer]:
+          - img "Virtual Try-On for Indian Ethnic Wear" [ref=e1082]
+          - generic [ref=e1084]:
+            - generic [ref=e1085]: Fashion
+            - heading "Virtual Try-On for Indian Ethnic Wear" [level=3] [ref=e1086]
+        - generic [ref=e1087] [cursor=pointer]:
+          - img "AI Home Decor Designer" [ref=e1088]
+          - generic [ref=e1090]:
+            - generic [ref=e1091]: Home Decor
+            - heading "AI Home Decor Designer" [level=3] [ref=e1092]
+        - generic [ref=e1093] [cursor=pointer]:
+          - img "Furniture Photography Studio" [ref=e1094]
+          - generic [ref=e1096]:
+            - generic [ref=e1097]: Home Decor
+            - heading "Furniture Photography Studio" [level=3] [ref=e1098]
+        - generic [ref=e1099] [cursor=pointer]:
+          - img "AI Interior Design Visualizer" [ref=e1100]
+          - generic [ref=e1102]:
+            - generic [ref=e1103]: Home Decor
+            - heading "AI Interior Design Visualizer" [level=3] [ref=e1104]

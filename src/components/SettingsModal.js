@@ -62,7 +62,7 @@ export function SettingsModal(onClose) {
             </p>
             <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.5rem;">
                 <button id="settings-cancel-btn" style="padding:0.5rem 1rem;border-radius:0.5rem;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:0.75rem;font-weight:700;cursor:pointer;">Cancel</button>
-                <button id="settings-save-btn" style="padding:0.5rem 1rem;border-radius:0.5rem;background:var(--color-primary,#d9ff00);color:#000;font-size:0.75rem;font-weight:700;cursor:pointer;border:none;">Save</button>
+                <button id="settings-save-btn" style="padding:0.5rem 1rem;border-radius:0.5rem;background:var(--color-primary,#FF4500);color:#000;font-size:0.75rem;font-weight:700;cursor:pointer;border:none;">Save</button>
             </div>
         </div>
     `;
