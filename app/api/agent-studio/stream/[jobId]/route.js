@@ -1,10 +1,15 @@
 import { getPublicJob } from '../../../../../lib/agent-jobs.js';
+import { requireAuthenticatedUser } from '../../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
+  const auth = await requireAuthenticatedUser(request);
+  if (!auth.ok) return auth.response;
+
   const { jobId } = await params;
+  const userId = auth.user.id;
   let cancelled = false;
   let timer;
   const encoder = new TextEncoder();
@@ -14,7 +19,7 @@ export async function GET(_request, { params }) {
       async function tick() {
         if (cancelled) return;
         try {
-          const job = await getPublicJob(jobId);
+          const job = await getPublicJob(jobId, userId);
           if (cancelled) return;
           if (!job) {
             controller.enqueue(encoder.encode('data: {"error":"job not found"}\n\n'));

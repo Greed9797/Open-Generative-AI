@@ -29,6 +29,13 @@ const TARGET_MODELS = [
   { label: "Runway Gen-4", value: "runway" },
 ];
 
+const MODEL_QUALITY_LABELS = {
+  seedance: "Alta fidelidade · 24fps",
+  veo3: "Cinema 8K · Fotorrealismo",
+  kling: "Pro · Alta consistência",
+  runway: "Cinematic · Gen4 Turbo",
+};
+
 const STYLES = ["Cinematic", "Commercial", "Documentary", "Abstract", "Social Media Short"];
 const SUPABASE_SESSION_KEY = "creativeos_supabase_session";
 
@@ -112,8 +119,8 @@ function BreakdownBars({ breakdown }) {
 const inputCls = "w-full bg-white/[0.04] border border-white/[0.07] rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-primary/40 focus:bg-white/[0.06] transition-all";
 const labelCls = "text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5 block";
 
-export default function AgentStudio({ apiKey, minimaxApiKey, geminiApiKey }) {
-  const [baseImageUrl, setBaseImageUrl] = useState("");
+export default function AgentStudio({ apiKey, minimaxApiKey, geminiApiKey, initialBaseImageUrl }) {
+  const [baseImageUrl, setBaseImageUrl] = useState(initialBaseImageUrl || "");
   const [roughPrompt, setRoughPrompt] = useState("");
   const [targetModel, setTargetModel] = useState("seedance");
   const [style, setStyle] = useState("Cinematic");
@@ -134,6 +141,18 @@ export default function AgentStudio({ apiKey, minimaxApiKey, geminiApiKey }) {
     return TARGET_MODELS.find((m) => m.value === value)?.label || value;
   }, [selectedJob?.targetModel, targetModel]);
   const allSegmentsDone = selectedJob?.segments?.every((s) => ["passed", "best_effort"].includes(s.status));
+
+  useEffect(() => {
+    const onSetAgentBaseImage = (event) => {
+      const url = event.detail?.url || event.detail?.imageUrl;
+      if (url) {
+        setBaseImageUrl(url);
+        setTab("new");
+      }
+    };
+    window.addEventListener("set-agent-base-image", onSetAgentBaseImage);
+    return () => window.removeEventListener("set-agent-base-image", onSetAgentBaseImage);
+  }, []);
 
   const refreshJobs = async () => {
     const response = await fetch("/api/agent-studio/list-jobs", { headers: supabaseAuthHeader() });
@@ -312,6 +331,9 @@ export default function AgentStudio({ apiKey, minimaxApiKey, geminiApiKey }) {
               <select value={targetModel} onChange={(e) => setTargetModel(e.target.value)} className={inputCls}>
                 {TARGET_MODELS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
+              {MODEL_QUALITY_LABELS[targetModel] && (
+                <p className="mt-1.5 text-[10px] font-semibold text-primary/70">{MODEL_QUALITY_LABELS[targetModel]}</p>
+              )}
             </div>
             <div>
               <span className={labelCls}>Estilo</span>

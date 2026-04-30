@@ -811,12 +811,12 @@ export default function LipSyncStudio({
                     <line x1="8" y1="23" x2="16" y2="23" />
                   </svg>
                 </div>
-                <div className="absolute top-4 right-4 text-[10px] text-primary/40 animate-pulse">🎙</div>
+                <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" />
               </div>
             </div>
-            <h1 className="font-black uppercase tracking-tight mb-6 text-center px-4 text-5xl sm:text-7xl md:text-[clamp(64px,7vw,96px)] bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent">
-              <span className="block text-[11px] font-bold uppercase tracking-[0.2em] text-white/30 mb-3">COMECE A CRIAR COM</span><br />
-              <span className="text-white">ESTÚDIO LIP SYNC</span>
+            <h1 className="font-black uppercase tracking-tight mb-6 text-center px-4" style={{ fontSize: 'clamp(40px, 7vw, 96px)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+              <span className="block text-[11px] font-bold uppercase tracking-[0.2em] text-white/30 mb-3" style={{ fontSize: 11, letterSpacing: '0.2em' }}>COMECE A CRIAR COM</span>
+              <span className="block text-white">ESTÚDIO <span style={{ color: 'var(--primary)' }}>LIP SYNC</span></span>
             </h1>
             <p className="text-white/40 text-sm md:text-base font-medium tracking-wide text-center max-w-lg leading-relaxed">
               Anime retratos ou sincronize lábios com áudio usando IA
@@ -839,7 +839,7 @@ export default function LipSyncStudio({
                   : "border-white/[0.03] bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white"
               }`}
             >
-              🖼 Imagem Retrato
+              Imagem Retrato
             </button>
             <button
               type="button"
@@ -850,7 +850,7 @@ export default function LipSyncStudio({
                   : "border-white/[0.03] bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white"
               }`}
             >
-              🎬 Vídeo
+              Vídeo
             </button>
           </div>
 

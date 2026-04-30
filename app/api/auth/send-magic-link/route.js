@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { enforceContentLength, getClientIp, rateLimit, rateLimitResponse } from '../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 
 export async function POST(request) {
   try {
+    const tooLarge = enforceContentLength(request, 8 * 1024);
+    if (tooLarge) return tooLarge;
+
+    const limited = rateLimit(`magic-link:${getClientIp(request)}`, { limit: 5, windowMs: 15 * 60_000 });
+    if (!limited.ok) return rateLimitResponse(limited);
+
     const { email } = await request.json();
     const trimmedEmail = String(email || '').trim().toLowerCase();
 
@@ -19,7 +26,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Supabase environment variables are not configured' }, { status: 500 });
     }
 
-    const origin = process.env.APP_URL || request.headers.get('origin') || new URL(request.url).origin;
+    const origin = new URL(process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || new URL(request.url).origin).origin;
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
@@ -30,16 +37,19 @@ export async function POST(request) {
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmedEmail,
       options: {
-        emailRedirectTo: `${origin}/studio`,
+        shouldCreateUser: true,
+        emailRedirectTo: `${origin}/api/auth/callback?next=/studio`,
       },
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      console.error(`[auth magic-link] error=${error.message}`);
+      return NextResponse.json({ error: 'Could not send magic link' }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ message: 'Verifique seu email para o link de acesso' });
   } catch (error) {
-    return NextResponse.json({ error: error.message || 'Could not send magic link' }, { status: 500 });
+    console.error(`[auth magic-link] error=${error.message}`);
+    return NextResponse.json({ error: 'Could not send magic link' }, { status: 500 });
   }
 }

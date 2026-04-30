@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { resolveApiKey } from '../../../../lib/resolve-api-key.js';
-import { bearerFromRequest, getSupabaseUser } from '../../../../lib/supabase-vault.js';
+import {
+  enforceContentLength,
+  getClientIp,
+  rateLimit,
+  rateLimitResponse,
+  requireAuthenticatedUser,
+} from '../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 
@@ -80,23 +86,34 @@ Use only the clips listed above unless the user explicitly asks for generated te
 
 export async function POST(request) {
   try {
-    const supabaseUser = await getSupabaseUser(bearerFromRequest(request)).catch(() => null);
+    const tooLarge = enforceContentLength(request, 128 * 1024);
+    if (tooLarge) return tooLarge;
+
+    const auth = await requireAuthenticatedUser(request);
+    if (!auth.ok) return auth.response;
+    const supabaseUser = auth.user;
+
+    const limited = rateLimit(`generate-composition:${supabaseUser.id}:${getClientIp(request)}`, { limit: 10, windowMs: 60_000 });
+    if (!limited.ok) return rateLimitResponse(limited);
+
     const { key: minimaxApiKey } = await resolveApiKey({
-      userId: supabaseUser?.id || null,
+      userId: supabaseUser.id,
       role: 'orchestrator',
-      fallbackKeys: { minimaxApiKey: request.headers.get('x-minimax-api-key') || '' },
     });
 
     const body = await request.json();
-    const prompt = String(body.prompt || '').trim();
-    const clips = Array.isArray(body.clips) ? body.clips : [];
+    const prompt = String(body.prompt || '').trim().slice(0, 4000);
+    const clips = Array.isArray(body.clips) ? body.clips.slice(0, 20) : [];
     const settings = {
-      width: Number(body.settings?.width) || 1920,
-      height: Number(body.settings?.height) || 1080,
-      fps: Number(body.settings?.fps) || 30,
+      width: Math.min(3840, Math.max(320, Number(body.settings?.width) || 1920)),
+      height: Math.min(2160, Math.max(240, Number(body.settings?.height) || 1080)),
+      fps: Math.min(60, Math.max(1, Number(body.settings?.fps) || 30)),
     };
     const conversationHistory = Array.isArray(body.conversationHistory)
-      ? body.conversationHistory.filter((message) => ['user', 'assistant'].includes(message?.role) && message?.content)
+      ? body.conversationHistory
+          .filter((message) => ['user', 'assistant'].includes(message?.role) && message?.content)
+          .slice(-10)
+          .map((message) => ({ role: message.role, content: String(message.content).slice(0, 4000) }))
       : [];
 
     if (!prompt) {
@@ -121,9 +138,10 @@ export async function POST(request) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      console.error(`[generate composition] provider status=${response.status} message=${data.error?.message || data.message || 'unknown'}`);
       return NextResponse.json(
-        { error: data.error?.message || data.message || 'MiniMax composition request failed' },
-        { status: response.status },
+        { error: 'MiniMax composition request failed' },
+        { status: 502 },
       );
     }
 
@@ -142,6 +160,7 @@ export async function POST(request) {
       usage: data.usage || null,
     });
   } catch (error) {
-    return NextResponse.json({ error: error.message || 'Failed to generate composition' }, { status: 500 });
+    console.error(`[generate composition] error=${error.message}`);
+    return NextResponse.json({ error: 'Failed to generate composition' }, { status: 500 });
   }
 }

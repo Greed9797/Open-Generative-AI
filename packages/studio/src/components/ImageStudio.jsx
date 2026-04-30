@@ -33,6 +33,22 @@ async function downloadImage(url, filename) {
   }
 }
 
+function GenerationDiagnostics({ audit }) {
+  if (!audit) return null;
+  return (
+    <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-white/5 bg-white/[0.025] p-2">
+      <span className="text-[9px] text-white/35">Provider</span>
+      <span className="truncate text-right text-[9px] font-bold text-white/55">{audit.effectiveProvider || "n/a"}</span>
+      <span className="text-[9px] text-white/35">Modelo real</span>
+      <span className="truncate text-right text-[9px] font-bold text-white/55">{audit.providerModel || audit.submittedModel || "n/a"}</span>
+      <span className="text-[9px] text-white/35">Fallback</span>
+      <span className="text-right text-[9px] font-bold text-white/55">{audit.fallbackUsed ? "usado" : "bloqueado/nao usado"}</span>
+      <span className="text-[9px] text-white/35">Modo</span>
+      <span className="truncate text-right text-[9px] font-bold text-white/55">{audit.providerMode || "production"}</span>
+    </div>
+  );
+}
+
 // ─── UploadButton (inline picker) ───────────────────────────────────────────
 
 function UploadButton({ apiKey, maxImages, onSelect, onClear, initialUrls = [] }) {
@@ -747,7 +763,13 @@ export default function ImageStudio({
   // ── Model / mode state ──────────────────────────────────────────────────
   const [customT2iModels, setCustomT2iModels] = useState([]);
   useEffect(() => {
-    fetch('/api/settings/api-keys')
+    let headers = {};
+    try {
+      const stored = localStorage.getItem('creativeos_supabase_session');
+      const token = stored ? JSON.parse(stored)?.accessToken : null;
+      if (token) headers = { Authorization: `Bearer ${token}` };
+    } catch { /* ignore */ }
+    fetch('/api/settings/api-keys', { headers })
       .then((r) => r.ok ? r.json() : { keys: [] })
       .then(({ keys = [] }) => {
         const custom = keys
@@ -1077,6 +1099,7 @@ export default function ImageStudio({
             model: selectedModelId,
             aspect_ratio: selectedAr,
             timestamp: new Date().toISOString(),
+            audit: res.audit,
           };
           addToHistory(entry);
           onGenerationComplete?.({
@@ -1084,6 +1107,7 @@ export default function ImageStudio({
             model: selectedModelId,
             prompt: prompt.trim(),
             type: "image",
+            audit: res.audit,
           });
         }
       });
@@ -1161,6 +1185,7 @@ export default function ImageStudio({
                   <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
                     {entry.prompt || "Sem prompt"}
                   </p>
+                  <GenerationDiagnostics audit={entry.audit} />
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20">
                       {entry.model?.replace("-", " ")}

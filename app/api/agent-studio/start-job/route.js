@@ -3,7 +3,13 @@ import { NextResponse } from 'next/server';
 import { setJob, appendLog } from '../../../../lib/agent-jobs.js';
 import { createServiceClient } from '../../../../lib/supabase/service.js';
 import { runPipeline } from '../../../../lib/pipeline.js';
-import { bearerFromRequest, getSupabaseUser } from '../../../../lib/supabase-vault.js';
+import {
+  enforceContentLength,
+  getClientIp,
+  rateLimit,
+  rateLimitResponse,
+  requireAuthenticatedUser,
+} from '../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes (requires Pro plan on Vercel; Railway has no limit)
@@ -18,17 +24,45 @@ function makeSegments() {
   }));
 }
 
+function safeProvider(value) {
+  const provider = String(value || 'seedance').trim().toLowerCase();
+  return /^[a-z0-9_-]{1,40}$/.test(provider) ? provider : 'seedance';
+}
+
+function safeText(value, maxLength) {
+  return String(value || '').trim().slice(0, maxLength);
+}
+
+function safeHttpUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim());
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
 export async function POST(request) {
   try {
+    const tooLarge = enforceContentLength(request, 64 * 1024);
+    if (tooLarge) return tooLarge;
+
+    const auth = await requireAuthenticatedUser(request);
+    if (!auth.ok) return auth.response;
+    const { user: supabaseUser } = auth;
+
+    const limited = rateLimit(`agent-start:${supabaseUser.id}:${getClientIp(request)}`, { limit: 8, windowMs: 60_000 });
+    if (!limited.ok) return rateLimitResponse(limited);
+
     const body = await request.json();
-    const supabaseUser = await getSupabaseUser(bearerFromRequest(request)).catch(() => null);
-    const baseImageUrl = String(body.baseImageUrl || '').trim();
+    const baseImageUrl = safeHttpUrl(body.baseImageUrl);
     if (!baseImageUrl) {
-      return NextResponse.json({ error: 'baseImageUrl is required' }, { status: 400 });
+      return NextResponse.json({ error: 'A valid baseImageUrl is required' }, { status: 400 });
     }
-    const roughPrompt = String(body.roughPrompt || '');
-    const targetModel = body.targetModel || 'seedance';
-    const userId = supabaseUser?.id || null;
+    const roughPrompt = safeText(body.roughPrompt, 4000);
+    const targetModel = safeProvider(body.targetModel);
+    const style = safeText(body.style || 'cinematic', 80) || 'cinematic';
+    const userId = supabaseUser.id;
 
     // Deduplication: only when authenticated. Anonymous jobs would collide across users.
     if (userId) {
@@ -50,7 +84,7 @@ export async function POST(request) {
       }
     }
 
-    const id = body.jobId || randomUUID();
+    const id = randomUUID();
     const now = new Date().toISOString();
     const job = {
       id,
@@ -58,15 +92,15 @@ export async function POST(request) {
       baseImageUrl,
       roughPrompt,
       targetModel,
-      style: body.style || 'cinematic',
+      style,
       segments: makeSegments(),
       orchestratorPlan: null,
       finalVideoUrl: null,
       log: [],
       userId,
       apiKeys: {
-        minimaxApiKey: request.headers.get('x-minimax-api-key') || '',
-        geminiApiKey: request.headers.get('x-gemini-api-key') || '',
+        minimaxApiKey: String(request.headers.get('x-minimax-api-key') || '').trim().slice(0, 4096),
+        geminiApiKey: String(request.headers.get('x-gemini-api-key') || '').trim().slice(0, 4096),
       },
       createdAt: now,
       updatedAt: now,
@@ -80,6 +114,7 @@ export async function POST(request) {
 
     return NextResponse.json({ jobId: id });
   } catch (error) {
-    return NextResponse.json({ error: error.message || 'Failed to start job' }, { status: 500 });
+    console.error(`[agent start] error=${error.message}`);
+    return NextResponse.json({ error: 'Failed to start job' }, { status: 500 });
   }
 }

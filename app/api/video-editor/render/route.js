@@ -5,12 +5,36 @@ import { mkdir, rm, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { NextResponse } from 'next/server';
-import { getSessionFromCookies } from '../../../../lib/supabase-vault.js';
+import {
+  enforceContentLength,
+  getClientIp,
+  rateLimit,
+  rateLimitResponse,
+  requireAuthenticatedUser,
+} from '../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 
 const execFileAsync = promisify(execFile);
 const QUALITY_VALUES = new Set(['fast', 'high', 'best']);
+const RENDER_CSP = [
+  "default-src 'none'",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' blob: https:",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+].join('; ');
+
+function validateRenderHtml(html) {
+  if (!html || html.length > 1024 * 1024) return false;
+  return !/(<\s*script\b|<\s*iframe\b|<\s*object\b|<\s*embed\b|javascript:|data:text\/html|on[a-z]+\s*=)/i.test(html);
+}
+
+function hardenRenderHtml(html) {
+  const meta = `<meta http-equiv="Content-Security-Policy" content="${RENDER_CSP}">`;
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head([^>]*)>/i, `<head$1>${meta}`);
+  return `<!doctype html><html><head>${meta}</head><body>${html}</body></html>`;
+}
 
 function friendlyRenderError(error) {
   const output = `${error.message || ''}\n${error.stderr || ''}\n${error.stdout || ''}`.toLowerCase();
@@ -20,12 +44,18 @@ function friendlyRenderError(error) {
   if (output.includes('hyperframes') && (output.includes('not found') || output.includes('could not determine executable') || output.includes('404'))) {
     return 'Hyperframes CLI was not found. Install it with: npm install -g hyperframes';
   }
-  return error.stderr || error.message || 'Hyperframes render failed';
+  console.error(`[render] error=${error.message || 'unknown'}`);
+  return 'Hyperframes render failed';
 }
 
 export async function POST(request) {
-  const { user } = await getSessionFromCookies().catch(() => ({ user: null }));
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const tooLarge = enforceContentLength(request, 1024 * 1024);
+  if (tooLarge) return tooLarge;
+
+  const auth = await requireAuthenticatedUser(request);
+  if (!auth.ok) return auth.response;
+  const limited = rateLimit(`render:${auth.user.id}:${getClientIp(request)}`, { limit: 5, windowMs: 60_000 });
+  if (!limited.ok) return rateLimitResponse(limited);
 
   const jobId = randomUUID();
   const cwd = process.cwd();
@@ -37,16 +67,16 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const html = String(body.html || '').trim();
-    const fps = Number(body.options?.fps) || 30;
+    const fps = Math.min(60, Math.max(1, Number(body.options?.fps) || 30));
     const quality = QUALITY_VALUES.has(body.options?.quality) ? body.options.quality : 'high';
 
-    if (!html) {
-      return NextResponse.json({ error: 'HTML composition is required' }, { status: 400 });
+    if (!validateRenderHtml(html)) {
+      return NextResponse.json({ error: 'HTML composition is not allowed' }, { status: 400 });
     }
 
     await mkdir(tempDir, { recursive: true });
     await mkdir(rendersDir, { recursive: true });
-    await writeFile(htmlPath, html, 'utf8');
+    await writeFile(htmlPath, hardenRenderHtml(html), 'utf8');
 
     await execFileAsync(
       'npx',

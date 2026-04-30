@@ -22,6 +22,12 @@ function getQualitiesForModel(modelList, modelId) {
   return model?.inputs?.quality?.enum || [];
 }
 
+const MAX_QUALITY_MODELS = {
+  t2v: "veo3.1-text-to-video",
+  i2v: "veo3.1-image-to-video",
+};
+const GEMINI_PARITY_SEED = 424242;
+
 async function downloadFile(url, filename) {
   try {
     const response = await fetch(url);
@@ -84,6 +90,31 @@ const VideoReadySvg = () => (
     <polyline points="7 10 10 13 15 8" stroke="#FF4500" strokeWidth="2.5" />
   </svg>
 );
+
+function GenerationDiagnostics({ audit }) {
+  if (!audit) return null;
+  const enhancement = audit.promptEnhancement;
+  return (
+    <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-white/5 bg-white/[0.025] p-2">
+      <span className="text-[9px] text-white/35">Provider</span>
+      <span className="truncate text-right text-[9px] font-bold text-white/55">{audit.effectiveProvider || "n/a"}</span>
+      <span className="text-[9px] text-white/35">Modelo real</span>
+      <span className="truncate text-right text-[9px] font-bold text-white/55">{audit.providerModel || audit.submittedModel || "n/a"}</span>
+      <span className="text-[9px] text-white/35">Fallback</span>
+      <span className="text-right text-[9px] font-bold text-white/55">{audit.fallbackUsed ? "usado" : "bloqueado/nao usado"}</span>
+      <span className="text-[9px] text-white/35">Enhancer</span>
+      <span className="truncate text-right text-[9px] font-bold text-white/55">
+        {enhancement?.enhanced ? enhancement.provider || "ativo" : enhancement?.reason || "off"}
+      </span>
+      {audit.seed && (
+        <>
+          <span className="text-[9px] text-white/35">Seed</span>
+          <span className="text-right text-[9px] font-bold text-white/55">{audit.seed}</span>
+        </>
+      )}
+    </div>
+  );
+}
 
 // ── Dropdown components ───────────────────────────────────────────────────────
 
@@ -243,11 +274,18 @@ export default function VideoStudio({
   // ── mode state ──
   const [imageMode, setImageMode] = useState(false); // i2v
   const [v2vMode, setV2vMode] = useState(false);
+  const [maxQualityMode, setMaxQualityMode] = useState(false);
 
   // ── custom models ──
   const [customT2vModels, setCustomT2vModels] = useState([]);
   useEffect(() => {
-    fetch('/api/settings/api-keys')
+    let headers = {};
+    try {
+      const stored = localStorage.getItem('creativeos_supabase_session');
+      const token = stored ? JSON.parse(stored)?.accessToken : null;
+      if (token) headers = { Authorization: `Bearer ${token}` };
+    } catch { /* ignore */ }
+    fetch('/api/settings/api-keys', { headers })
       .then((r) => r.ok ? r.json() : { keys: [] })
       .then(({ keys = [] }) => {
         const custom = keys
@@ -438,6 +476,7 @@ export default function VideoStudio({
         const data = JSON.parse(stored);
         if (data.imageMode !== undefined) setImageMode(data.imageMode);
         if (data.v2vMode !== undefined) setV2vMode(data.v2vMode);
+        if (data.maxQualityMode !== undefined) setMaxQualityMode(data.maxQualityMode);
         if (data.selectedModel) setSelectedModel(data.selectedModel);
         if (data.selectedModelName) setSelectedModelName(data.selectedModelName);
         if (data.selectedAr) setSelectedAr(data.selectedAr);
@@ -485,6 +524,7 @@ export default function VideoStudio({
         const state = {
           imageMode,
           v2vMode,
+          maxQualityMode,
           selectedModel,
           selectedModelName,
           selectedAr,
@@ -507,6 +547,7 @@ export default function VideoStudio({
   }, [
     imageMode,
     v2vMode,
+    maxQualityMode,
     selectedModel,
     selectedModelName,
     selectedAr,
@@ -539,7 +580,9 @@ export default function VideoStudio({
       setUploadedVideoName(null);
       setV2vMode(false);
       if (!imageMode) {
-        const firstI2V = i2vModels[0];
+        const firstI2V = maxQualityMode
+          ? i2vModels.find((m) => m.id === MAX_QUALITY_MODELS.i2v) || i2vModels[0]
+          : i2vModels[0];
         setImageMode(true);
         setSelectedModel(firstI2V.id);
         setSelectedModelName(firstI2V.name);
@@ -572,6 +615,7 @@ export default function VideoStudio({
         setImageMode(false);
       }
       setV2vMode(true);
+      setMaxQualityMode(false);
       const firstV2V = v2vModels[0];
       setSelectedModel(firstV2V.id);
       setSelectedModelName(firstV2V.name);
@@ -652,7 +696,9 @@ export default function VideoStudio({
       setV2vMode(false);
 
       if (!imageMode) {
-        const firstI2V = i2vModels[0];
+        const firstI2V = maxQualityMode
+          ? i2vModels.find((m) => m.id === MAX_QUALITY_MODELS.i2v) || i2vModels[0]
+          : i2vModels[0];
         setImageMode(true);
         setSelectedModel(firstI2V.id);
         setSelectedModelName(firstI2V.name);
@@ -672,7 +718,9 @@ export default function VideoStudio({
   const clearImageUpload = () => {
     setUploadedImageUrl(null);
     setImageMode(false);
-    const first = allT2vModels[0];
+    const first = maxQualityMode
+      ? allT2vModels.find((m) => m.id === MAX_QUALITY_MODELS.t2v) || allT2vModels[0]
+      : allT2vModels[0];
     setSelectedModel(first.id);
     setSelectedModelName(first.name);
     applyControlsForModel(first.id, false, false);
@@ -702,6 +750,7 @@ export default function VideoStudio({
         setImageMode(false);
       }
       setV2vMode(true);
+      setMaxQualityMode(false);
       const firstV2V = v2vModels[0];
       setSelectedModel(firstV2V.id);
       setSelectedModelName(firstV2V.name);
@@ -722,7 +771,9 @@ export default function VideoStudio({
     setUploadedVideoUrl(null);
     setUploadedVideoName(null);
     setV2vMode(false);
-    const first = allT2vModels[0];
+    const first = maxQualityMode
+      ? allT2vModels.find((m) => m.id === MAX_QUALITY_MODELS.t2v) || allT2vModels[0]
+      : allT2vModels[0];
     setSelectedModel(first.id);
     setSelectedModelName(first.name);
     applyControlsForModel(first.id, false, false);
@@ -732,6 +783,7 @@ export default function VideoStudio({
   // ── model selection from dropdown ─────────────────────────────────────────
   const handleModelSelect = useCallback(
     (m, isV2V) => {
+      setMaxQualityMode(false);
       if (isV2V) {
         setV2vMode(true);
         setImageMode(false);
@@ -757,6 +809,21 @@ export default function VideoStudio({
     [v2vMode, imageMode, applyControlsForModel],
   );
 
+  const applyMaxQualityMode = useCallback(
+    (enabled) => {
+      setMaxQualityMode(enabled);
+      if (!enabled || v2vMode) return;
+      const targetId = imageMode ? MAX_QUALITY_MODELS.i2v : MAX_QUALITY_MODELS.t2v;
+      const modelList = imageMode ? i2vModels : allT2vModels;
+      const target = modelList.find((m) => m.id === targetId);
+      if (!target) return;
+      setSelectedModel(target.id);
+      setSelectedModelName(target.name);
+      applyControlsForModel(target.id, imageMode, false);
+    },
+    [allT2vModels, applyControlsForModel, imageMode, v2vMode],
+  );
+
   // ── add to local history ──────────────────────────────────────────────────
   const addToLocalHistory = useCallback((entry) => {
     setLocalHistory((prev) => [entry, ...prev].slice(0, 30));
@@ -775,6 +842,9 @@ export default function VideoStudio({
     const currentModel = getCurrentModel();
     const isExtendMode = currentModel?.requiresRequestId;
     const trimmedPrompt = prompt.trim();
+    const requestModel = maxQualityMode && !v2vMode && !isExtendMode
+      ? (imageMode ? MAX_QUALITY_MODELS.i2v : MAX_QUALITY_MODELS.t2v)
+      : selectedModel;
 
     if (v2vMode) {
       if (!uploadedVideoUrl) {
@@ -836,23 +906,30 @@ export default function VideoStudio({
             type: "video",
           });
       } else if (imageMode) {
-        const i2vParams = { model: selectedModel, image_url: uploadedImageUrl };
+        const i2vParams = { model: requestModel, image_url: uploadedImageUrl };
         if (trimmedPrompt) i2vParams.prompt = trimmedPrompt;
         i2vParams.aspect_ratio = selectedAr;
-        const durations = getDurationsForI2VModel(selectedModel);
+        const durations = getDurationsForI2VModel(requestModel);
         if (durations.length > 0) i2vParams.duration = selectedDuration;
-        const resolutions = getResolutionsForI2VModel(selectedModel);
+        const resolutions = getResolutionsForI2VModel(requestModel);
         if (resolutions.length > 0) i2vParams.resolution = selectedResolution;
         if (selectedQuality) i2vParams.quality = selectedQuality;
         if (selectedMode) i2vParams.mode = selectedMode;
+        if (maxQualityMode) {
+          i2vParams.max_quality = true;
+          i2vParams.exact_prompt = true;
+          i2vParams.disable_fallback = true;
+          i2vParams.provider_mode = "gemini_parity";
+          i2vParams.seed = GEMINI_PARITY_SEED;
+        }
 
         res = await generateI2V(apiKey, i2vParams);
         if (!res?.url) throw new Error("Nenhuma URL de vídeo retornada pela API");
 
         const genId = res.id || Date.now().toString();
-        if (selectedModel === "seedance-v2.0-i2v") {
+        if (requestModel === "seedance-v2.0-i2v") {
           setLastGenerationId(genId);
-          setLastGenerationModel(selectedModel);
+          setLastGenerationModel(requestModel);
         } else {
           setLastGenerationId(null);
           setLastGenerationModel(null);
@@ -861,23 +938,26 @@ export default function VideoStudio({
           id: genId,
           url: res.url,
           prompt: trimmedPrompt,
-          model: selectedModel,
+          model: requestModel,
           aspect_ratio: selectedAr,
           duration: selectedDuration,
+          resolution: selectedResolution,
+          audit: res.audit,
           timestamp: new Date().toISOString(),
         };
         addToLocalHistory(entry);
-        showVideoInCanvas(res.url, selectedModel);
+        showVideoInCanvas(res.url, requestModel);
         if (onGenerationComplete)
           onGenerationComplete({
             url: res.url,
-            model: selectedModel,
+            model: requestModel,
             prompt: trimmedPrompt,
             type: "video",
+            audit: res.audit,
           });
       } else {
         // T2V (including extend mode)
-        const params = { model: selectedModel };
+        const params = { model: requestModel };
         if (trimmedPrompt) params.prompt = trimmedPrompt;
 
         if (isExtendMode) {
@@ -886,23 +966,30 @@ export default function VideoStudio({
           params.aspect_ratio = selectedAr;
         }
 
-        const durations = getDurationsForModel(selectedModel);
+        const durations = getDurationsForModel(requestModel);
         if (durations.length > 0) params.duration = selectedDuration;
-        const resolutions = getResolutionsForVideoModel(selectedModel);
+        const resolutions = getResolutionsForVideoModel(requestModel);
         if (resolutions.length > 0) params.resolution = selectedResolution;
         if (selectedQuality) params.quality = selectedQuality;
         if (selectedMode) params.mode = selectedMode;
+        if (maxQualityMode) {
+          params.max_quality = true;
+          params.exact_prompt = true;
+          params.disable_fallback = true;
+          params.provider_mode = "gemini_parity";
+          params.seed = GEMINI_PARITY_SEED;
+        }
 
         res = await generateVideo(apiKey, params);
         if (!res?.url) throw new Error("Nenhuma URL de vídeo retornada pela API");
 
         const genId = res.id || Date.now().toString();
         if (
-          selectedModel === "seedance-v2.0-t2v" ||
-          selectedModel === "seedance-v2.0-i2v"
+          requestModel === "seedance-v2.0-t2v" ||
+          requestModel === "seedance-v2.0-i2v"
         ) {
           setLastGenerationId(genId);
-          setLastGenerationModel(selectedModel);
+          setLastGenerationModel(requestModel);
         } else {
           setLastGenerationId(null);
           setLastGenerationModel(null);
@@ -911,19 +998,22 @@ export default function VideoStudio({
           id: genId,
           url: res.url,
           prompt: trimmedPrompt,
-          model: selectedModel,
+          model: requestModel,
           aspect_ratio: selectedAr,
           duration: selectedDuration,
+          resolution: selectedResolution,
+          audit: res.audit,
           timestamp: new Date().toISOString(),
         };
         addToLocalHistory(entry);
-        showVideoInCanvas(res.url, selectedModel);
+        showVideoInCanvas(res.url, requestModel);
         if (onGenerationComplete)
           onGenerationComplete({
             url: res.url,
-            model: selectedModel,
+            model: requestModel,
             prompt: trimmedPrompt,
             type: "video",
+            audit: res.audit,
           });
       }
     } catch (e) {
@@ -939,6 +1029,7 @@ export default function VideoStudio({
     prompt,
     v2vMode,
     imageMode,
+    maxQualityMode,
     selectedModel,
     selectedAr,
     selectedDuration,
@@ -1212,6 +1303,36 @@ export default function VideoStudio({
                 </div>
               )}
             </div>
+
+            {!v2vMode && (
+              <button
+                type="button"
+                onClick={() => applyMaxQualityMode(!maxQualityMode)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all"
+                style={{
+                  background: maxQualityMode ? "rgba(255,69,0,0.12)" : "rgba(255,255,255,0.03)",
+                  border: maxQualityMode ? "1px solid rgba(255,69,0,0.35)" : "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div className="flex flex-col items-start">
+                  <span style={{ fontSize: 11, fontWeight: 800, color: maxQualityMode ? "#FF4500" : "rgba(255,255,255,0.75)" }}>
+                    Paridade Gemini
+                  </span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
+                    Veo 3.1 padrão • prompt exato
+                  </span>
+                </div>
+                <span
+                  className="relative inline-flex h-5 w-9 items-center rounded-full transition-all"
+                  style={{ background: maxQualityMode ? "#FF4500" : "rgba(255,255,255,0.12)" }}
+                >
+                  <span
+                    className="inline-block h-4 w-4 rounded-full bg-black transition-all"
+                    style={{ transform: maxQualityMode ? "translateX(18px)" : "translateX(2px)" }}
+                  />
+                </span>
+              </button>
+            )}
           </div>
 
           {/* AR / Duration / Resolution grid */}
@@ -1426,6 +1547,7 @@ export default function VideoStudio({
                     <p className="text-white/70 text-xs line-clamp-3 leading-relaxed" title={entry.prompt}>
                       {entry.prompt || "Sem prompt"}
                     </p>
+                    <GenerationDiagnostics audit={entry.audit} />
                     <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                       <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded border border-primary/20 whitespace-nowrap">
                         {entry.model?.replace("-", " ")}

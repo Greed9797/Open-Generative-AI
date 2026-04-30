@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ALL_ROLES, isValidRoles } from '../../../../lib/api-key-providers.js';
-import { getSessionFromCookies, supabaseRest, supabaseRpc } from '../../../../lib/supabase-vault.js';
+import { resolveAuth, supabaseRest, supabaseRpc } from '../../../../lib/supabase-vault.js';
+import { enforceContentLength } from '../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 
@@ -16,9 +17,9 @@ function publicKey(row) {
   };
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const { user, accessToken } = await getSessionFromCookies();
+    const { user, accessToken } = await resolveAuth(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const rows = await supabaseRest(
@@ -27,22 +28,26 @@ export async function GET() {
     );
     return NextResponse.json({ keys: rows.map(publicKey) });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[api keys] list failed: ${error.message}`);
+    return NextResponse.json({ error: 'Could not list API keys' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const { user, accessToken } = await getSessionFromCookies();
+    const tooLarge = enforceContentLength(request, 16 * 1024);
+    if (tooLarge) return tooLarge;
+
+    const { user, accessToken } = await resolveAuth(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const providerName = String(body.providerName || '').trim();
+    const providerName = String(body.providerName || '').trim().slice(0, 120);
     const rawKey = String(body.rawKey || '').trim();
     const roles = body.roles;
 
     if (!providerName) return NextResponse.json({ error: 'providerName is required' }, { status: 400 });
-    if (!rawKey) return NextResponse.json({ error: 'rawKey is required' }, { status: 400 });
+    if (!rawKey || rawKey.length > 4096) return NextResponse.json({ error: 'rawKey is invalid' }, { status: 400 });
     if (!isValidRoles(roles)) {
       return NextResponse.json({ error: `roles must include at least one of: ${ALL_ROLES.join(', ')}` }, { status: 400 });
     }
@@ -50,7 +55,7 @@ export async function POST(request) {
     const id = await supabaseRpc('insert_api_key', {
       p_provider_name: providerName,
       p_raw_key: rawKey,
-      p_model_identifier: body.modelIdentifier ? String(body.modelIdentifier).trim() : null,
+      p_model_identifier: body.modelIdentifier ? String(body.modelIdentifier).trim().slice(0, 160) : null,
       p_roles: roles,
       p_is_custom: Boolean(body.isCustom),
     }, { accessToken });
@@ -63,6 +68,7 @@ export async function POST(request) {
       createdAt: new Date().toISOString(),
     }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[api keys] create failed: ${error.message}`);
+    return NextResponse.json({ error: 'Could not save API key' }, { status: 500 });
   }
 }

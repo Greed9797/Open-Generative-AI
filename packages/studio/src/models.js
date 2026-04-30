@@ -827,7 +827,10 @@ export const t2vModels = [
       "aspect_ratio": {
         "enum": [
           "16:9",
-          "9:16"
+          "9:16",
+          "1:1",
+          "4:3",
+          "3:4"
         ],
         "title": "Aspect Ratio",
         "name": "aspect_ratio",
@@ -837,6 +840,8 @@ export const t2vModels = [
       },
       "duration": {
         "enum": [
+          4,
+          6,
           8
         ],
         "title": "Duration",
@@ -847,7 +852,8 @@ export const t2vModels = [
       },
       "resolution": {
         "enum": [
-          "1080p"
+          "1080p",
+          "4K"
         ],
         "title": "Resolution",
         "name": "resolution",
@@ -870,7 +876,10 @@ export const t2vModels = [
       "aspect_ratio": {
         "enum": [
           "16:9",
-          "9:16"
+          "9:16",
+          "1:1",
+          "4:3",
+          "3:4"
         ],
         "title": "Aspect Ratio",
         "name": "aspect_ratio",
@@ -880,6 +889,8 @@ export const t2vModels = [
       },
       "duration": {
         "enum": [
+          4,
+          6,
           8
         ],
         "title": "Duration",
@@ -890,7 +901,8 @@ export const t2vModels = [
       },
       "resolution": {
         "enum": [
-          "1080p"
+          "1080p",
+          "4K"
         ],
         "title": "Resolution",
         "name": "resolution",
@@ -913,7 +925,10 @@ export const t2vModels = [
       "aspect_ratio": {
         "enum": [
           "16:9",
-          "9:16"
+          "9:16",
+          "1:1",
+          "4:3",
+          "3:4"
         ],
         "title": "Aspect Ratio",
         "name": "aspect_ratio",
@@ -923,6 +938,8 @@ export const t2vModels = [
       },
       "duration": {
         "enum": [
+          4,
+          6,
           8
         ],
         "title": "Duration",
@@ -933,7 +950,8 @@ export const t2vModels = [
       },
       "resolution": {
         "enum": [
-          "1080p"
+          "1080p",
+          "4K"
         ],
         "title": "Resolution",
         "name": "resolution",
@@ -4895,7 +4913,7 @@ export const i2vModels = [
         "name": "prompt",
         "description": "The prompt to generate the video",
         "examples": [
-          "The camera slowly pulls back from the portrait, revealing the rooftop garden swaying in the breeze, clouds drifting across the orange-pink sky. The city lights begin to flicker on in the distance as the sun sets. She gazes at the horizon and softly says: “Every ending feels like the start of something new.” Natural ambient sounds of wind and faint city life in the background."
+          "The camera slowly pulls back from the portrait, revealing the rooftop garden swaying in the breeze, clouds drifting across the orange-pink sky. The city lights begin to flicker on in the distance as the sun sets. She gazes at the horizon and softly says: \"Every ending feels like the start of something new.\" Natural ambient sounds of wind and faint city life in the background."
         ]
       },
       "resolution": {
@@ -5002,7 +5020,7 @@ export const i2vModels = [
         "name": "prompt",
         "description": "The prompt to generate the video",
         "examples": [
-          "Scene: Submerged coral clearing, soft light filtering from above.\nCharacters: Tiny jellyfish with monocle and top hat, hosting tea for small seahorses.\nAction: Jellyfish floats and pours tea → bubbles rise slowly; seahorses sip → tiny octopus clumsily serves cake.\nCamera: Wide underwater → tracking floating jellyfish → macro on bubbles.\nLook & Lighting: Aqua-blue palette; subtle caustics on sand; shimmering reflections on water surfaces.\nMotion/Physics: Water currents gently sway characters; bubbles rise naturally; floating cakes wobble lightly.\nAudio: Bubbling water + faint harp melody; line: “Tea, my dear friends, before it drifts away.”"
+          "Scene: Submerged coral clearing, soft light filtering from above.\nCharacters: Tiny jellyfish with monocle and top hat, hosting tea for small seahorses.\nAction: Jellyfish floats and pours tea → bubbles rise slowly; seahorses sip → tiny octopus clumsily serves cake.\nCamera: Wide underwater → tracking floating jellyfish → macro on bubbles.\nLook & Lighting: Aqua-blue palette; subtle caustics on sand; shimmering reflections on water surfaces.\nMotion/Physics: Water currents gently sway characters; bubbles rise naturally; floating cakes wobble lightly.\nAudio: Bubbling water + faint harp melody; line: \"Tea, my dear friends, before it drifts away.\""
         ]
       },
       "aspect_ratio": {
@@ -5263,7 +5281,7 @@ export const i2vModels = [
         "name": "prompt",
         "description": "Text prompt describing the video.",
         "examples": [
-          "Scene: Giant floating library orbiting in zero-gravity space.\nCharacters: Astronaut-librarian flipping glowing pages suspended midair.\nAction: Camera rotates 360° around drifting books → zooms through a floating page into a nebula outside window.\nCamera: Orbit + push-through transition.\nLighting: Cool cosmic ambient with warm page glows; rim lighting on suit.\nMotion: Slow rotational drift; pages react with fluid inertia.\nAudio: Ethereal synth pads + book rustle in vacuum hush.\nMood: Awe, wonder, intellectual calm.\nLine: “Wow veo3.1 launched in Muapiapp. Let's go!”"
+          "Scene: Giant floating library orbiting in zero-gravity space.\nCharacters: Astronaut-librarian flipping glowing pages suspended midair.\nAction: Camera rotates 360° around drifting books → zooms through a floating page into a nebula outside window.\nCamera: Orbit + push-through transition.\nLighting: Cool cosmic ambient with warm page glows; rim lighting on suit.\nMotion: Slow rotational drift; pages react with fluid inertia.\nAudio: Ethereal synth pads + book rustle in vacuum hush.\nMood: Awe, wonder, intellectual calm.\nLine: \"Wow veo3.1 launched in Muapiapp. Let's go!\""
         ]
       },
       "aspect_ratio": {
@@ -5273,7 +5291,10 @@ export const i2vModels = [
         "description": "Aspect ratio of the output video.",
         "enum": [
           "16:9",
-          "9:16"
+          "9:16",
+          "1:1",
+          "4:3",
+          "3:4"
         ],
         "default": "16:9"
       },
@@ -5283,6 +5304,8 @@ export const i2vModels = [
         "name": "duration",
         "description": "The duration of the generated video in seconds",
         "enum": [
+          4,
+          6,
           8
         ],
         "default": 8
@@ -5293,7 +5316,8 @@ export const i2vModels = [
         "name": "resolution",
         "description": "The resolution of the generated video.",
         "enum": [
-          "1080p"
+          "1080p",
+          "4K"
         ],
         "default": "1080p"
       }
@@ -5313,7 +5337,7 @@ export const i2vModels = [
         "name": "prompt",
         "description": "Text prompt describing the video.",
         "examples": [
-          "Scene: Lantern festival by the river at night.\nCharacters: Young boy with his grandmother.\nAction: Camera starts behind them → tracks one lantern downstream → lift to sky full of lights.\nLighting: Warm candlelight vs cool night reflections.\nAudio: Gentle music, water flow.\nDialogue:\nGrandmother: “Every lantern carries a wish.”\nBoy: “Then mine’s for you to stay forever.”\nGrandmother (smiling): “I’ll be right there, glowing among them.”"
+          "Scene: Lantern festival by the river at night.\nCharacters: Young boy with his grandmother.\nAction: Camera starts behind them → tracks one lantern downstream → lift to sky full of lights.\nLighting: Warm candlelight vs cool night reflections.\nAudio: Gentle music, water flow.\nDialogue:\nGrandmother: \"Every lantern carries a wish.\"\nBoy: \"Then mine’s for you to stay forever.\"\nGrandmother (smiling): \"I’ll be right there, glowing among them.\""
         ]
       },
       "aspect_ratio": {
@@ -5323,7 +5347,10 @@ export const i2vModels = [
         "description": "Aspect ratio of the output video.",
         "enum": [
           "16:9",
-          "9:16"
+          "9:16",
+          "1:1",
+          "4:3",
+          "3:4"
         ],
         "default": "16:9"
       },
@@ -5333,6 +5360,8 @@ export const i2vModels = [
         "name": "duration",
         "description": "The duration of the generated video in seconds",
         "enum": [
+          4,
+          6,
           8
         ],
         "default": 8
@@ -5343,7 +5372,8 @@ export const i2vModels = [
         "name": "resolution",
         "description": "The resolution of the generated video.",
         "enum": [
-          "1080p"
+          "1080p",
+          "4K"
         ],
         "default": "1080p"
       }
@@ -5370,7 +5400,10 @@ export const i2vModels = [
         "description": "Aspect ratio of the output video.",
         "enum": [
           "16:9",
-          "9:16"
+          "9:16",
+          "1:1",
+          "4:3",
+          "3:4"
         ],
         "default": "16:9"
       },
@@ -5380,6 +5413,8 @@ export const i2vModels = [
         "name": "duration",
         "description": "The duration of the generated video in seconds",
         "enum": [
+          4,
+          6,
           8
         ],
         "default": 8
@@ -5390,7 +5425,8 @@ export const i2vModels = [
         "name": "resolution",
         "description": "The resolution of the generated video.",
         "enum": [
-          "1080p"
+          "1080p",
+          "4K"
         ],
         "default": "1080p"
       }

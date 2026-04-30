@@ -1,38 +1,56 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { assertSupabaseConfigured, getSessionFromCookies } from '../../../../../lib/supabase-vault.js';
+import { enforceContentLength, validateUploadFile } from '../../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 
 export async function POST(request) {
   try {
+    const tooLarge = enforceContentLength(request);
+    if (tooLarge) return tooLarge;
+
     const { user, accessToken } = await getSessionFromCookies();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const form = await request.formData();
     const file = form.get('file');
-    if (!file || typeof file.arrayBuffer !== 'function') {
-      return NextResponse.json({ error: 'file is required' }, { status: 400 });
-    }
+    const validated = await validateUploadFile(file, { maxBytes: Number(process.env.MAX_AVATAR_MB || 5) * 1024 * 1024 });
+    if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: validated.status });
 
     const { url, anonKey } = assertSupabaseConfigured();
-    const ext = String(file.name || 'avatar.jpg').split('.').pop() || 'jpg';
-    const path = `${user.id}/${randomUUID()}.${ext}`;
+    const path = `${user.id}/${randomUUID()}.${validated.extension}`;
     const uploadResponse = await fetch(`${url}/storage/v1/object/avatars/${path}`, {
       method: 'POST',
       headers: {
         apikey: anonKey,
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': file.type || 'application/octet-stream',
-        'x-upsert': 'true',
+        'Content-Type': validated.mimeType,
+        'x-upsert': 'false',
       },
-      body: Buffer.from(await file.arrayBuffer()),
+      body: validated.buffer,
     });
     const data = await uploadResponse.json().catch(() => ({}));
-    if (!uploadResponse.ok) throw new Error(data.message || data.error || 'Avatar upload failed');
+    if (!uploadResponse.ok) {
+      console.error(`[avatar upload] user=${user.id} error=${data.message || data.error || uploadResponse.status}`);
+      return NextResponse.json({ error: 'Avatar upload failed' }, { status: 500 });
+    }
 
-    return NextResponse.json({ avatarUrl: `${url}/storage/v1/object/public/avatars/${path}` });
+    const avatarUrl = `${url}/storage/v1/object/public/avatars/${path}`;
+    await fetch(`${url}/rest/v1/profiles?user_id=eq.${user.id}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ avatar_url: avatarUrl }),
+    }).catch(() => null);
+
+    return NextResponse.json({ avatarUrl });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[avatar upload] error=${error.message}`);
+    return NextResponse.json({ error: 'Avatar upload failed' }, { status: 500 });
   }
 }

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { isValidRoles } from '../../../../../lib/api-key-providers.js';
-import { getSessionFromCookies, supabaseRest } from '../../../../../lib/supabase-vault.js';
+import { resolveAuth, supabaseRest } from '../../../../../lib/supabase-vault.js';
+import { enforceContentLength } from '../../../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function publicKey(row) {
   return {
@@ -18,8 +20,12 @@ function publicKey(row) {
 
 export async function PATCH(request, { params }) {
   try {
+    const tooLarge = enforceContentLength(request, 16 * 1024);
+    if (tooLarge) return tooLarge;
+
     const { id } = await params;
-    const { user, accessToken } = await getSessionFromCookies();
+    if (!UUID_PATTERN.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const { user, accessToken } = await resolveAuth(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
@@ -29,7 +35,7 @@ export async function PATCH(request, { params }) {
       patch.roles = body.roles;
     }
     if ('isActive' in body) patch.is_active = Boolean(body.isActive);
-    if ('modelIdentifier' in body) patch.model_identifier = body.modelIdentifier ? String(body.modelIdentifier).trim() : null;
+    if ('modelIdentifier' in body) patch.model_identifier = body.modelIdentifier ? String(body.modelIdentifier).trim().slice(0, 160) : null;
 
     const rows = await supabaseRest(
       `user_api_keys?id=eq.${id}&user_id=eq.${user.id}&select=id,provider_name,model_identifier,roles,is_custom,is_active,created_at`,
@@ -43,14 +49,16 @@ export async function PATCH(request, { params }) {
     if (!rows?.[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(publicKey(rows[0]));
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[api keys] patch failed: ${error.message}`);
+    return NextResponse.json({ error: 'Could not update API key' }, { status: 500 });
   }
 }
 
 export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
-    const { user, accessToken } = await getSessionFromCookies();
+    if (!UUID_PATTERN.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const { user, accessToken } = await resolveAuth(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await supabaseRest(`user_api_keys?id=eq.${id}&user_id=eq.${user.id}`, {
       method: 'DELETE',
@@ -58,6 +66,7 @@ export async function DELETE(request, { params }) {
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[api keys] delete failed: ${error.message}`);
+    return NextResponse.json({ error: 'Could not delete API key' }, { status: 500 });
   }
 }

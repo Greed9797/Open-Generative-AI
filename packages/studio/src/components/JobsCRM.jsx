@@ -45,12 +45,12 @@ const KANBAN_COLUMNS = [
 
 function modelIcon(model) {
   const m = String(model || "").toLowerCase();
-  if (m.includes("seedance")) return "🌱";
-  if (m.includes("veo")) return "🎬";
-  if (m.includes("kling")) return "⚡";
-  if (m.includes("runway")) return "✈️";
-  if (m.includes("wan")) return "🌊";
-  return "🎥";
+  if (m.includes("seedance")) return "S";
+  if (m.includes("veo")) return "V";
+  if (m.includes("kling")) return "K";
+  if (m.includes("runway")) return "R";
+  if (m.includes("wan")) return "W";
+  return "G";
 }
 
 function relativeTime(value) {

@@ -799,18 +799,16 @@ export default function CinemaStudio({
             {/* Atmospheric glow */}
             <div className="absolute inset-0 pointer-events-none" aria-hidden="true" style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(79,195,247,0.07) 0%, rgba(255,69,0,0.04) 55%, transparent 80%)', filter: 'blur(40px)' }} />
 
-            {/* Corner guide marks */}
-            <div className="absolute hidden md:block" style={{ top: '10%', left: '10%', width: 20, height: 20, borderTop: '1.5px solid rgba(255,255,255,0.12)', borderLeft: '1.5px solid rgba(255,255,255,0.12)' }} />
-            <div className="absolute hidden md:block" style={{ top: '10%', right: '10%', width: 20, height: 20, borderTop: '1.5px solid rgba(255,255,255,0.12)', borderRight: '1.5px solid rgba(255,255,255,0.12)' }} />
-            <div className="absolute hidden md:block" style={{ bottom: '32%', left: '10%', width: 20, height: 20, borderBottom: '1.5px solid rgba(255,255,255,0.12)', borderLeft: '1.5px solid rgba(255,255,255,0.12)' }} />
-            <div className="absolute hidden md:block" style={{ bottom: '32%', right: '10%', width: 20, height: 20, borderBottom: '1.5px solid rgba(255,255,255,0.12)', borderRight: '1.5px solid rgba(255,255,255,0.12)' }} />
+            {/* Viewfinder corner marks */}
+            <div className="vf-corner vf-tl hidden md:block" />
+            <div className="vf-corner vf-tr hidden md:block" />
+            <div className="vf-corner vf-bl hidden md:block" />
+            <div className="vf-corner vf-br hidden md:block" />
 
             <div className="relative z-10 flex flex-col items-center gap-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/25">ESTÚDIO CINEMA</p>
-              <h1 className="font-black text-center leading-[1.02] tracking-tight" style={{ fontSize: 'clamp(34px, 5.5vw, 78px)' }}>
-                <span className="bg-gradient-to-b from-white via-white/90 to-white/35 bg-clip-text text-transparent">
-                  O que você filmaria<br />com orçamento infinito?
-                </span>
+              <h1 className="font-black text-center text-white leading-[1.02] tracking-tight" style={{ fontSize: 'clamp(34px, 5.5vw, 78px)', letterSpacing: '-0.02em' }}>
+                O que você filmaria<br />com <span style={{ color: 'var(--primary)' }}>orçamento infinito</span>?
               </h1>
             </div>
           </div>

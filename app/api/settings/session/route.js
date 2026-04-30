@@ -9,7 +9,8 @@ export async function GET(request) {
     if (!user) return NextResponse.json({ user: null }, { status: 401 });
     return NextResponse.json({ user: { id: user.id, email: user.email || null } });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[session] get failed: ${error.message}`);
+    return NextResponse.json({ error: 'Could not read session' }, { status: 500 });
   }
 }
 
@@ -18,6 +19,7 @@ export async function POST() {
     const session = await createAnonymousSession();
     const response = NextResponse.json({
       expiresAt: session.expires_at,
+      accessToken: session.access_token || null,
       user: session.user ? { id: session.user.id, email: session.user.email || null } : null,
     });
 
@@ -42,6 +44,7 @@ export async function POST() {
     }
     return response;
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`[session] create failed: ${error.message}`);
+    return NextResponse.json({ error: 'Could not create session' }, { status: 500 });
   }
 }

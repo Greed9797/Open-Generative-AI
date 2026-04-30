@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { safeRedirectPath } from '../../../lib/security.mjs';
 
 export const runtime = 'nodejs';
 
@@ -9,7 +10,7 @@ export async function GET(request) {
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type');
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/studio';
+  const next = safeRedirectPath(searchParams.get('next'), '/studio');
 
   const cookieStore = await cookies();
 
@@ -33,18 +34,20 @@ export async function GET(request) {
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type });
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(new URL(next, origin));
     }
-    return NextResponse.redirect(`${origin}/?error=auth_callback_error&message=${encodeURIComponent(error.message)}`);
+    console.error(`[auth callback] otp failed: ${error.message}`);
+    return NextResponse.redirect(`${origin}/?error=auth_callback_error`);
   }
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(new URL(next, origin));
     }
-    return NextResponse.redirect(`${origin}/?error=auth_callback_error&message=${encodeURIComponent(error.message)}`);
+    console.error(`[auth callback] code exchange failed: ${error.message}`);
+    return NextResponse.redirect(`${origin}/?error=auth_callback_error`);
   }
 
-  return NextResponse.redirect(`${origin}${next}`);
+  return NextResponse.redirect(new URL(next, origin));
 }

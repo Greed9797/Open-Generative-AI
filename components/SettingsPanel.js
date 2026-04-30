@@ -45,23 +45,6 @@ export default function SettingsPanel() {
 
   const customKeys = useMemo(() => keys.filter((key) => key.isCustom), [keys]);
 
-  const requestSession = useCallback(async () => {
-    setSaving('session');
-    setError('');
-    try {
-      const response = await fetch('/api/settings/session', { method: 'POST' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not create Supabase session');
-      localStorage.setItem(SESSION_KEY, JSON.stringify(data));
-      setSession(data);
-      setMessage('Sessão segura criada no Supabase.');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving('');
-    }
-  }, []);
-
   const loadKeys = useCallback(async (nextSession = session) => {
     const token = nextSession?.accessToken;
     if (!token) return;
@@ -228,7 +211,7 @@ export default function SettingsPanel() {
       }
 
       const response = await fetch('/api/settings/profile', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders(session) },
         body: JSON.stringify({ displayName: profile.displayName, avatarUrl }),
       });
@@ -250,16 +233,9 @@ export default function SettingsPanel() {
         <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-white/[0.03] p-8">
           <h1 className="text-2xl font-bold">Configurações</h1>
           <p className="mt-3 text-sm leading-6 text-white/55">
-            Para salvar chaves de API criptografadas no Supabase, este MVP precisa criar uma sessão anônima segura. Essa sessão gera um `auth.uid()` e permite usar RLS sem expor service role no browser.
+            Entre com magic link para salvar perfil e chaves de API criptografadas no Supabase. O Settings usa apenas a sessão real do Supabase Auth.
           </p>
           {error && <div className="mt-5 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
-          <button
-            onClick={requestSession}
-            disabled={saving === 'session'}
-            className="mt-6 rounded-lg bg-[#FF4500] px-5 py-3 text-sm font-bold text-black disabled:opacity-50"
-          >
-            {saving === 'session' ? 'Criando...' : 'Criar sessão segura'}
-          </button>
         </div>
       </div>
     );
@@ -354,6 +330,7 @@ export default function SettingsPanel() {
                             className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-2.5 text-sm outline-none focus:border-[#FF4500]/50"
                           />
                           <p className="text-[11px] text-white/30">Sua chave é criptografada antes de ser armazenada</p>
+                          {provider.helpText && <p className="text-[11px] text-amber-400/60">{provider.helpText}</p>}
                           <button onClick={() => saveProvider(provider)} disabled={saving === provider.name || !providerInputs[provider.name]?.trim()} className="rounded-lg bg-[#FF4500] px-6 py-3 text-sm font-bold text-black disabled:opacity-50">
                             {saving === provider.name ? 'Salvando...' : 'Salvar'}
                           </button>

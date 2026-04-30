@@ -1,35 +1,40 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '../../../../lib/supabase/service.js';
-import { getSessionFromCookies } from '../../../../lib/supabase-vault.js';
+import { enforceContentLength, requireAuthenticatedUser, validateUploadFile } from '../../../../lib/security.mjs';
 import { randomUUID } from 'node:crypto';
 
 export const runtime = 'nodejs';
 
 export async function POST(request) {
-  try {
-    const { user } = await getSessionFromCookies().catch(() => ({ user: null }));
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+        const tooLarge = enforceContentLength(request);
+        if (tooLarge) return tooLarge;
 
-    const formData = await request.formData();
-    const file = formData.get('file');
-    if (!file || typeof file.arrayBuffer !== 'function') {
-      return NextResponse.json({ error: 'Image file is required' }, { status: 400 });
-    }
+        const auth = await requireAuthenticatedUser(request);
+        if (!auth.ok) return auth.response;
+        const { user } = auth;
 
-    const supabase = createServiceClient();
-    const ext = file.name?.split('.').pop() || 'bin';
-    const path = `${user.id}/${randomUUID()}.${ext}`;
-    const buffer = await file.arrayBuffer();
+        const formData = await request.formData();
+        const file = formData.get('file');
+        const validated = await validateUploadFile(file);
+        if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: validated.status });
 
-    const { error } = await supabase.storage
-      .from('uploads')
-      .upload(path, buffer, { contentType: file.type || 'application/octet-stream', upsert: true });
+        const supabase = createServiceClient();
+        const path = `${user.id}/${randomUUID()}.${validated.extension}`;
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        const { error } = await supabase.storage
+            .from('uploads')
+            .upload(path, validated.buffer, { contentType: validated.mimeType, upsert: false });
+
+        if (error) {
+            console.error(`[agent upload] user=${user.id} error=${error.message}`);
+            return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+        }
 
     const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(path);
     return NextResponse.json({ url: publicUrl });
-  } catch (err) {
-    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });
-  }
+    } catch (err) {
+        console.error(`[agent upload] error=${err.message}`);
+        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    }
 }

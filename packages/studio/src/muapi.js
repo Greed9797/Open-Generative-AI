@@ -2,6 +2,16 @@ import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV
 
 const BASE_URL = '/api/proxy';
 
+function copyQualityOsParams(payload, params) {
+    if (params.provider_mode) payload.provider_mode = params.provider_mode;
+    if (params.exact_prompt !== undefined) payload.exact_prompt = params.exact_prompt;
+    if (params.disable_fallback !== undefined) payload.disable_fallback = params.disable_fallback;
+    if (params.max_quality !== undefined) payload.max_quality = params.max_quality;
+    if (params.strict_provider !== undefined) payload.strict_provider = params.strict_provider;
+    if (params.run_id) payload.run_id = params.run_id;
+    if (params.seed !== undefined && params.seed !== -1) payload.seed = params.seed;
+}
+
 async function pollForResult(requestId, key, maxAttempts = 900, interval = 2000) {
     const pollUrl = `${BASE_URL}/api/v1/predictions/${requestId}/result`;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -43,7 +53,7 @@ async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 
     if (onRequestId) onRequestId(requestId);
     const result = await pollForResult(requestId, key, maxAttempts);
     const outputUrl = result.outputs?.[0] || result.url || result.output?.url;
-    return { ...result, url: outputUrl };
+    return { ...result, url: outputUrl, audit: submitData.audit };
 }
 
 export async function generateImage(apiKey, params) {
@@ -53,6 +63,7 @@ export async function generateImage(apiKey, params) {
     if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
     if (params.resolution) payload.resolution = params.resolution;
     if (params.quality) payload.quality = params.quality;
+    copyQualityOsParams(payload, params);
     if (params.image_url) {
         payload.image_url = params.image_url;
         payload.strength = params.strength || 0.6;
@@ -61,7 +72,6 @@ export async function generateImage(apiKey, params) {
     } else {
         payload.image_url = null;
     }
-    if (params.seed && params.seed !== -1) payload.seed = params.seed;
     return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60);
 }
 
@@ -79,6 +89,7 @@ export async function generateI2I(apiKey, params) {
     if (params.aspect_ratio) payload.aspect_ratio = params.aspect_ratio;
     if (params.resolution) payload.resolution = params.resolution;
     if (params.quality) payload.quality = params.quality;
+    copyQualityOsParams(payload, params);
     return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60);
 }
 
@@ -93,6 +104,7 @@ export async function generateVideo(apiKey, params) {
     if (params.quality) payload.quality = params.quality;
     if (params.mode) payload.mode = params.mode;
     if (params.image_url) payload.image_url = params.image_url;
+    copyQualityOsParams(payload, params);
     return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
 }
 
@@ -111,11 +123,13 @@ export async function generateI2V(apiKey, params) {
     if (params.resolution) payload.resolution = params.resolution;
     if (params.quality) payload.quality = params.quality;
     if (params.mode) payload.mode = params.mode;
+    copyQualityOsParams(payload, params);
     return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
 }
 
 export async function generateMarketingStudioAd(apiKey, params) {
-    const endpoint = params.resolution === '1080p' ? 'sd-2-vip-omni-reference-1080p' : 'seedance-2-vip-omni-reference';
+    const autoEndpoint = params.resolution === '1080p' ? 'sd-2-vip-omni-reference-1080p' : 'seedance-2-vip-omni-reference';
+    const endpoint = params.modelOverride || autoEndpoint;
     const payload = {
         prompt: params.prompt,
         aspect_ratio: params.aspect_ratio || '16:9',
@@ -186,16 +200,116 @@ export function uploadFile(apiKey, file, onProgress) {
     });
 }
 
-export async function getTemplateWorkflows() { return []; }
-export async function getUserWorkflows() { return []; }
-export async function getPublishedWorkflows() { return []; }
-export async function createWorkflow() { throw new Error('Workflow backend not configured'); }
-export async function updateWorkflowName() { throw new Error('Workflow backend not configured'); }
-export async function deleteWorkflow() { throw new Error('Workflow backend not configured'); }
-export async function getWorkflowInputs() { return {}; }
-export async function executeWorkflow() { throw new Error('Workflow backend not configured'); }
-export async function getAllNodeSchemas() { return {}; }
-export async function getWorkflowData() { return null; }
-export async function getNodeSchemas() { return {}; }
-export async function runSingleNode() { throw new Error('Workflow backend not configured'); }
+const WF = '/api/workflow';
+
+export async function getTemplateWorkflows(apiKey) {
+    const r = await fetch(`${WF}/get-template-workflows`, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+    if (!r.ok) throw new Error(`Failed to fetch template workflows: ${r.status}`);
+    return r.json();
+}
+
+export async function getUserWorkflows(apiKey) {
+    const r = await fetch(`${WF}/get-workflow-defs`, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+    if (!r.ok) throw new Error(`Failed to fetch user workflows: ${r.status}`);
+    return r.json();
+}
+
+export async function getPublishedWorkflows(apiKey) {
+    const r = await fetch(`${WF}/get-published-workflows`, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+    if (!r.ok) throw new Error(`Failed to fetch published workflows: ${r.status}`);
+    return r.json();
+}
+
+export async function createWorkflow(apiKey, payload) {
+    const r = await fetch(`${WF}/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+        body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error(`Failed to create workflow: ${r.status}`);
+    return r.json();
+}
+
+export async function updateWorkflowName(apiKey, workflowId, name) {
+    const r = await fetch(`${WF}/update-name/${workflowId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+        body: JSON.stringify({ name })
+    });
+    if (!r.ok) throw new Error(`Failed to rename workflow: ${r.status}`);
+    return r.json();
+}
+
+export async function deleteWorkflow(apiKey, workflowId) {
+    const r = await fetch(`${WF}/delete-workflow-def/${workflowId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey }
+    });
+    if (!r.ok) throw new Error(`Failed to delete workflow: ${r.status}`);
+    return r.json();
+}
+
+export async function getWorkflowInputs(apiKey, workflowId) {
+    const r = await fetch(`${WF}/${workflowId}/api-inputs`, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+    if (!r.ok) throw new Error(`Failed to fetch workflow inputs: ${r.status}`);
+    return r.json();
+}
+
+async function pollWorkflowResult(runId, apiKey, maxAttempts = 900, interval = 2000) {
+    const url = `${WF}/run/${runId}/api-outputs`;
+    for (let i = 1; i <= maxAttempts; i++) {
+        await new Promise(res => setTimeout(res, interval));
+        try {
+            const r = await fetch(url, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+            if (!r.ok) { if (r.status >= 500) continue; throw new Error(`Poll failed: ${r.status}`); }
+            const data = await r.json();
+            const status = data.status?.toLowerCase();
+            if (status === 'completed' || status === 'succeeded' || status === 'success') return data;
+            if (status === 'failed' || status === 'error') throw new Error(`Workflow failed: ${data.error || 'Unknown error'}`);
+        } catch (err) { if (i === maxAttempts) throw err; }
+    }
+    throw new Error('Workflow timed out after polling.');
+}
+
+export async function executeWorkflow(apiKey, workflowId, inputs) {
+    const r = await fetch(`${WF}/${workflowId}/api-execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+        body: JSON.stringify({ inputs })
+    });
+    if (!r.ok) throw new Error(`Failed to execute workflow: ${r.status}`);
+    const submitData = await r.json();
+    const runId = submitData.run_id || submitData.id;
+    if (!runId) return submitData;
+    return pollWorkflowResult(runId, apiKey);
+}
+
+export async function getAllNodeSchemas(apiKey, workflowId) {
+    const r = await fetch(`${WF}/${workflowId}/node-schemas`, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+    if (!r.ok) throw new Error(`Failed to fetch node schemas: ${r.status}`);
+    return r.json();
+}
+
+export async function getWorkflowData(apiKey, workflowId) {
+    const r = await fetch(`${WF}/get-workflow-def/${workflowId}`, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+    if (!r.ok) throw new Error(`Failed to fetch workflow data: ${r.status}`);
+    return r.json();
+}
+
+export async function getNodeSchemas(apiKey, workflowId) {
+    const r = await fetch(`${WF}/${workflowId}/api-node-schemas`, { headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey } });
+    if (!r.ok) throw new Error(`Failed to fetch node schemas: ${r.status}`);
+    return r.json();
+}
+
+export async function runSingleNode(apiKey, workflowId, nodeId, payload) {
+    const r = await fetch(`${WF}/${workflowId}/node/${nodeId}/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+        body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error(`Failed to run node: ${r.status}`);
+    return r.json();
+}
+
 export async function deleteNodeRun() { return {}; }
